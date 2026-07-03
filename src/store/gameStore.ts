@@ -113,76 +113,76 @@ export const useGameStore = create<GameState>((set, get) => ({
   // Screen
   currentScreen: 'title',
   previousScreen: 'title',
-  setScreen: (screen) => set((s) => ({ previousScreen: s.currentScreen, currentScreen: screen })),
-  goBack: () => set((s) => ({ currentScreen: s.previousScreen })),
+  setScreen: (screen: ScreenType) => set((s: GameState) => ({ previousScreen: s.currentScreen, currentScreen: screen })),
+  goBack: () => set((s: GameState) => ({ currentScreen: s.previousScreen })),
 
   // Game mode
   gameMode: 'ai',
-  setGameMode: (mode) => set({ gameMode: mode }),
+  setGameMode: (mode: GameMode) => set({ gameMode: mode }),
 
   // Level
   currentLevel: 1,
-  setCurrentLevel: (level) => set({ currentLevel: level }),
+  setCurrentLevel: (level: number) => set({ currentLevel: level }),
 
   // Game data
   players: [],
-  setPlayers: (players) => set((s) => ({
+  setPlayers: (players: Player[] | ((prev: Player[]) => Player[])) => set((s: GameState) => ({
     players: typeof players === 'function' ? players(s.players) : players,
   })),
   boardTiles: [],
-  setBoardTiles: (tiles) => set((s) => ({
+  setBoardTiles: (tiles: PlacedTile[] | ((prev: PlacedTile[]) => PlacedTile[])) => set((s: GameState) => ({
     boardTiles: typeof tiles === 'function' ? tiles(s.boardTiles) : tiles,
   })),
   boneyard: [],
-  setBoneyard: (tiles) => set((s) => ({
+  setBoneyard: (tiles: Tile[] | ((prev: Tile[]) => Tile[])) => set((s: GameState) => ({
     boneyard: typeof tiles === 'function' ? tiles(s.boneyard) : tiles,
   })),
   currentPlayerIndex: 0,
-  setCurrentPlayerIndex: (index) => set({ currentPlayerIndex: index }),
+  setCurrentPlayerIndex: (index: number) => set({ currentPlayerIndex: index }),
   matchScores: [0, 0, 0, 0],
-  setMatchScores: (scores) => set((s) => ({
+  setMatchScores: (scores: number[] | ((prev: number[]) => number[])) => set((s: GameState) => ({
     matchScores: typeof scores === 'function' ? scores(s.matchScores) : scores,
   })),
   turnTimer: 30,
-  setTurnTimer: (time) => set({ turnTimer: time }),
+  setTurnTimer: (time: number) => set({ turnTimer: time }),
   isTimerRunning: false,
-  setIsTimerRunning: (running) => set({ isTimerRunning: running }),
+  setIsTimerRunning: (running: boolean) => set({ isTimerRunning: running }),
   roundWinner: null,
-  setRoundWinner: (winner) => set({ roundWinner: winner }),
+  setRoundWinner: (winner: string | null) => set({ roundWinner: winner }),
   matchWinner: null,
-  setMatchWinner: (winner) => set({ matchWinner: winner }),
+  setMatchWinner: (winner: string | null) => set({ matchWinner: winner }),
   isPaused: false,
-  setIsPaused: (paused) => set({ isPaused: paused }),
+  setIsPaused: (paused: boolean) => set({ isPaused: paused }),
   canUndo: false,
-  setCanUndo: (can) => set({ canUndo: can }),
+  setCanUndo: (can: boolean) => set({ canUndo: can }),
   lastMove: null,
-  setLastMove: (move) => set({ lastMove: move }),
+  setLastMove: (move: { tile: Tile; fromBoneyard: boolean } | null) => set({ lastMove: move }),
   gameMessage: '',
-  setGameMessage: (msg) => set({ gameMessage: msg }),
+  setGameMessage: (msg: string) => set({ gameMessage: msg }),
   animatingTiles: [],
-  setAnimatingTiles: (tiles) => set({ animatingTiles: tiles }),
+  setAnimatingTiles: (tiles: string[]) => set({ animatingTiles: tiles }),
 
   // Power-ups
   powerUps: [...defaultPowerUps],
-  usePowerUp: (type) => set((s) => ({
-    powerUps: s.powerUps.map((p) =>
+  usePowerUp: (type: string) => set((s: GameState) => ({
+    powerUps: s.powerUps.map((p: PowerUp) =>
       p.type === type ? { ...p, uses: Math.max(0, p.uses - 1) } : p
     ),
   })),
-  resetPowerUps: () => set({ powerUps: defaultPowerUps.map((p) => ({ ...p, uses: p.maxUses })) }),
+  resetPowerUps: () => set({ powerUps: defaultPowerUps.map((p: PowerUp) => ({ ...p, uses: p.maxUses })) }),
 
   // Settings
   settings: { ...defaultSettings },
-  updateSettings: (newSettings) => set((s) => ({
+  updateSettings: (newSettings: Partial<GameSettings>) => set((s: GameState) => ({
     settings: { ...s.settings, ...newSettings },
   })),
 
   // Progress
   progress: { ...defaultProgress },
-  updateProgress: (newProgress) => set((s) => ({
+  updateProgress: (newProgress: Partial<GameProgress>) => set((s: GameState) => ({
     progress: { ...s.progress, ...newProgress },
   })),
-  completeLevel: (level, stars, score) => set((s) => {
+  completeLevel: (level: number, stars: number, score: number) => set((s: GameState) => {
     const currentStars = s.progress.levelStars[level] || 0;
     const newStars = Math.max(currentStars, stars);
     const newUnlocked = Math.max(s.progress.unlockedLevel, level + 1);
@@ -207,8 +207,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   // Stats
   gamesPlayed: 0,
   gamesWon: 0,
-  setGamesPlayed: (n) => set({ gamesPlayed: n }),
-  setGamesWon: (n) => set({ gamesWon: n }),
+  setGamesPlayed: (n: number) => set({ gamesPlayed: n }),
+  setGamesWon: (n: number) => set({ gamesWon: n }),
 
   // Actions
   resetMatch: () => set({
@@ -247,7 +247,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     lastMove: null,
     gameMessage: '',
     animatingTiles: [],
-    powerUps: defaultPowerUps.map((p) => ({ ...p, uses: p.maxUses })),
+    powerUps: defaultPowerUps.map((p: PowerUp) => ({ ...p, uses: p.maxUses })),
     settings: { ...defaultSettings },
     progress: { ...defaultProgress },
     gamesPlayed: 0,

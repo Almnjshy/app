@@ -12,7 +12,7 @@ import {
   calculateRoundWinner,
 } from '@/lib/gameEngine';
 import { LEVELS, DIFFICULTY_SETTINGS, AI_NAMES } from '@/types/game';
-import type { Tile, Player, PowerUp } from '@/types/game';
+import type { Tile, Player } from '@/types/game';
 import { DominoTile } from '@/components/DominoTile';
 import { PlayerAvatar } from '@/components/PlayerAvatar';
 import { Board } from '@/components/Board';
@@ -69,6 +69,7 @@ export default function GameScreen() {
   const [showChat, setShowChat] = useState(false);
   const [scorePopup, setScorePopup] = useState<{ text: string; x: number; y: number } | null>(null);
   const [localTimer, setLocalTimer] = useState(30);
+  const [gameReady, setGameReady] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const aiTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const gameInitialized = useRef(false);
@@ -122,6 +123,7 @@ export default function GameScreen() {
     setLastMove(null);
     setGameMessage('');
     setSelectedTile(null);
+    setGameReady(true);
 
     const firstPlayer = determineFirstPlayer(newPlayers);
     setCurrentPlayerIndex(firstPlayer);
@@ -130,7 +132,7 @@ export default function GameScreen() {
 
   // Timer
   useEffect(() => {
-    if (!isTimerRunning || isPaused || matchWinner) return;
+    if (!isTimerRunning || isPaused || matchWinner || !gameReady) return;
 
     setLocalTimer(30);
     timerRef.current = setInterval(() => {
@@ -146,11 +148,11 @@ export default function GameScreen() {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isTimerRunning, isPaused, matchWinner, currentPlayerIndex]);
+  }, [isTimerRunning, isPaused, matchWinner, currentPlayerIndex, gameReady]);
 
   // AI Turn
   useEffect(() => {
-    if (matchWinner || players[currentPlayerIndex]?.isHuman) return;
+    if (matchWinner || !gameReady) return;
 
     const currentPlayer = players[currentPlayerIndex];
     if (!currentPlayer || currentPlayer.isHuman) return;
@@ -165,13 +167,12 @@ export default function GameScreen() {
     return () => {
       if (aiTimeoutRef.current) clearTimeout(aiTimeoutRef.current);
     };
-  }, [currentPlayerIndex, players, boardTiles, matchWinner]);
+  }, [currentPlayerIndex, players, boardTiles, matchWinner, gameReady]);
 
   const handleTurnTimeout = useCallback(() => {
     const currentPlayer = players[currentPlayerIndex];
     if (!currentPlayer) return;
 
-    // Try to draw from boneyard
     if (boneyard.length > 0) {
       const drawn = boneyard[0];
       const newBoneyard = boneyard.slice(1);
@@ -221,7 +222,6 @@ export default function GameScreen() {
         checkRoundEnd(newTiles, currentPlayerIndex);
       }
     } else {
-      // Try to draw
       if (boneyard.length > 0) {
         const drawn = boneyard[0];
         const newBoneyard = boneyard.slice(1);
@@ -233,7 +233,6 @@ export default function GameScreen() {
         ));
 
         if (canPlayTile(drawn, boardTiles)) {
-          // AI will play the drawn tile
           setTimeout(() => handleAIPlay(), 1500);
           return;
         } else {
@@ -251,9 +250,8 @@ export default function GameScreen() {
 
   const checkRoundEnd = useCallback((playerTiles: Tile[], _playerIndex?: number) => {
     if (playerTiles.length === 0) {
-      // Player emptied their hand - round over
       const { winnerIndex, points } = calculateRoundWinner(players);
-      const bonus = 10; // Domino bonus
+      const bonus = 10;
       const totalPoints = points + bonus;
 
       const newScores = [...matchScores];
@@ -264,7 +262,6 @@ export default function GameScreen() {
       setScorePopup({ text: `+${totalPoints}`, x: 50, y: 50 });
       setTimeout(() => setScorePopup(null), 2000);
 
-      // Check match winner
       if (newScores[winnerIndex] >= targetScore) {
         setMatchWinner(players[winnerIndex].id);
         setIsTimerRunning(false);
@@ -277,7 +274,6 @@ export default function GameScreen() {
         return;
       }
 
-      // Start new round
       setTimeout(() => startNewRound(), 2000);
     } else {
       const nextIndex = (currentPlayerIndex + 1) % players.length;
@@ -326,7 +322,6 @@ export default function GameScreen() {
     }
 
     if (selectedTile?.id === tile.id) {
-      // Play the tile
       const sides = getValidSides(tile, boardTiles);
       const side = sides[0] || 'right';
       const newBoard = placeTileOnBoard(tile, boardTiles, side);
@@ -375,7 +370,6 @@ export default function GameScreen() {
 
   const handleUndo = () => {
     if (!canUndo || !lastMove) return;
-    // Implementation would restore previous state
     setCanUndo(false);
   };
 
@@ -401,7 +395,7 @@ export default function GameScreen() {
         setLocalTimer((prev: number) => Math.min(prev + 15, 60));
         break;
       case 'peek':
-        setGameMessage(' peeking at opponent tiles...');
+        setGameMessage('賳馗乇丞 禺丕胤賮丞 毓賱賶 賯胤毓 丕賱禺氐賲...');
         setTimeout(() => setGameMessage(''), 3000);
         break;
     }
@@ -418,7 +412,18 @@ export default function GameScreen() {
   const humanPlayer = players.find((p: Player) => p.isHuman);
   const playableTiles = humanPlayer ? getPlayableTiles(humanPlayer.tiles, boardTiles) : [];
 
-  const emojis = ['馃榾', '馃槀', '馃槑', '馃', '馃憤', '馃憦', '馃敟', '馃挴', '馃幆', '猸�', '馃帀', '馃槺'];
+  const emojis = ['馃榾', '馃槀', '馃槑', '馃槫', '馃憤', '馃憥', '馃帀', '馃槺', '馃敟', '馃拃', '馃帄', '馃'];
+
+  if (!gameReady) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-[#0D7A3A]">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-[#C9A84C] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-white text-lg font-arabic">噩丕乇賷 鬲丨賲賷賱 丕賱賱毓亘丞...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden bg-[#0D7A3A]">
@@ -426,7 +431,7 @@ export default function GameScreen() {
       <div
         className="absolute inset-0"
         style={{
-          backgroundImage: 'url(/assets/table_bg.jpg)',
+          backgroundImage: 'url(/app/assets/table_bg.jpg)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}
@@ -585,82 +590,64 @@ export default function GameScreen() {
                   setPlayers(players.map((p: Player, i: number) => ({ ...p, isActive: i === nextIndex })));
                   setTurnTimer(30);
                 }}
-                className="px-6 py-2 bg-[#E74C3C] text-white rounded-lg font-bold text-sm font-arabic hover:scale-105 transition-transform"
+                className="px-6 py-2 bg-red-600 text-white rounded-lg font-bold text-sm font-arabic hover:scale-105 transition-transform"
               >
                 鬲賲乇賷乇
               </button>
             </div>
           )}
         </div>
-      </div>
 
-      {/* Power-ups bar */}
-      <div className="relative z-10 flex items-center justify-center gap-2 px-4 py-2">
-        {powerUps.map((pu: PowerUp) => (
+        {/* Power-ups bar */}
+        <div className="flex items-center justify-center gap-2 py-2">
+          {powerUps.map((pu) => (
+            <button
+              key={pu.type}
+              onClick={() => handleUsePowerUp(pu.type)}
+              disabled={pu.uses <= 0}
+              className={`relative w-10 h-10 rounded-lg flex items-center justify-center transition-all ${
+                pu.uses > 0
+                  ? 'bg-[#2A1A10] border border-[#C9A84C] hover:scale-110'
+                  : 'bg-[#1A0E08] border border-[#3D2817] opacity-50'
+              }`}
+            >
+              {pu.type === 'peek' && <Eye className="w-5 h-5 text-[#C9A84C]" />}
+              {pu.type === 'undo' && <Undo2 className="w-5 h-5 text-[#C9A84C]" />}
+              {pu.type === 'extraTime' && <Clock className="w-5 h-5 text-[#C9A84C]" />}
+              {pu.type === 'hint' && <Lightbulb className="w-5 h-5 text-[#C9A84C]" />}
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#C9A84C] text-[#1A0E08] rounded-full text-xs font-bold flex items-center justify-center">
+                {pu.uses}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* Bottom action bar */}
+        <div className="flex items-center justify-center gap-4 py-2">
           <button
-            key={pu.type}
-            onClick={() => handleUsePowerUp(pu.type)}
-            disabled={pu.uses <= 0 || !currentPlayer?.isHuman}
-            className={`relative w-10 h-10 rounded-lg flex items-center justify-center transition-all ${
-              pu.uses > 0 && currentPlayer?.isHuman
-                ? 'bg-[#2D1810]/80 border border-[#C9A84C]/40 hover:scale-110'
-                : 'bg-[#2D1810]/40 border border-white/10 opacity-40'
-            }`}
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            className="w-10 h-10 rounded-full glass-panel flex items-center justify-center hover:scale-110 transition-transform"
           >
-            {pu.type === 'peek' && <Eye className="w-5 h-5 text-[#C9A84C]" />}
-            {pu.type === 'undo' && <Undo2 className="w-5 h-5 text-[#C9A84C]" />}
-            {pu.type === 'extraTime' && <Clock className="w-5 h-5 text-[#C9A84C]" />}
-            {pu.type === 'hint' && <Lightbulb className="w-5 h-5 text-[#C9A84C]" />}
-            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#C9A84C] text-[10px] text-[#1A0E08] font-bold flex items-center justify-center">
-              {pu.uses}
-            </span>
+            <Smile className="w-5 h-5 text-[#C9A84C]" />
           </button>
-        ))}
-      </div>
+          <button
+            onClick={() => setShowChat(!showChat)}
+            className="w-10 h-10 rounded-full glass-panel flex items-center justify-center hover:scale-110 transition-transform"
+          >
+            <MessageCircle className="w-5 h-5 text-[#C9A84C]" />
+          </button>
+          <button
+            onClick={handleQuit}
+            className="w-10 h-10 rounded-full glass-panel flex items-center justify-center hover:scale-110 transition-transform"
+          >
+            <LogOut className="w-5 h-5 text-red-400" />
+          </button>
+        </div>
 
-      {/* Bottom action bar */}
-      <div className="relative z-10 flex items-center justify-between px-4 py-3 bg-gradient-to-t from-black/60 to-transparent">
-        <button
-          onClick={() => setShowChat(!showChat)}
-          className="w-10 h-10 rounded-full glass-panel flex items-center justify-center hover:scale-110 transition-transform"
-        >
-          <MessageCircle className="w-5 h-5 text-[#C9A84C]" />
-        </button>
-        <button
-          onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-          className="w-10 h-10 rounded-full glass-panel flex items-center justify-center hover:scale-110 transition-transform"
-        >
-          <Smile className="w-5 h-5 text-[#C9A84C]" />
-        </button>
-        <button
-          onClick={() => {}}
-          className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#C9A84C] to-[#A08030] text-[#1A0E08] font-bold text-sm font-arabic hover:scale-105 transition-transform"
-        >
-          <Trophy className="w-4 h-4 inline ml-1" />
-          胤丕賵賱丞
-        </button>
-        <button
-          onClick={handleUndo}
-          disabled={!canUndo}
-          className={`w-10 h-10 rounded-full flex items-center justify-center transition-transform ${
-            canUndo ? 'glass-panel hover:scale-110' : 'bg-white/5 opacity-30'
-          }`}
-        >
-          <Undo2 className="w-5 h-5 text-[#C9A84C]" />
-        </button>
-        <button
-          onClick={handleQuit}
-          className="w-10 h-10 rounded-full glass-panel flex items-center justify-center hover:scale-110 transition-transform"
-        >
-          <LogOut className="w-5 h-5 text-[#C9A84C]" />
-        </button>
-      </div>
-
-      {/* Emoji picker */}
-      {showEmojiPicker && (
-        <div className="absolute bottom-20 left-4 right-4 z-50 glass-panel rounded-xl p-3 animate-slide-up">
-          <div className="flex flex-wrap gap-2 justify-center">
-            {emojis.map((emoji: string) => (
+        {/* Emoji picker */}
+        {showEmojiPicker && (
+          <div className="absolute bottom-20 left-1/2 -translate-x-1/2 glass-panel rounded-xl p-3 flex flex-wrap gap-2 max-w-[200px] z-20">
+            {emojis.map((emoji) => (
               <button
                 key={emoji}
                 onClick={() => {
@@ -668,73 +655,52 @@ export default function GameScreen() {
                   setShowEmojiPicker(false);
                   setTimeout(() => setGameMessage(''), 2000);
                 }}
-                className="text-2xl hover:scale-125 transition-transform p-1"
+                className="text-2xl hover:scale-125 transition-transform"
               >
                 {emoji}
               </button>
             ))}
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Score popup */}
-      {scorePopup && (
-        <div
-          className="absolute z-50 pointer-events-none"
-          style={{
-            left: `${scorePopup.x}%`,
-            top: `${scorePopup.y}%`,
-            transform: 'translate(-50%, -50%)',
-            animation: 'scorePopup 1.5s ease-out forwards',
-          }}
-        >
-          <span className="text-4xl font-bold text-[#C9A84C] drop-shadow-lg">
-            {scorePopup.text}
-          </span>
-        </div>
-      )}
-
-      {/* Pause overlay */}
-      {isPaused && (
-        <div className="absolute inset-0 z-50 bg-black/70 flex items-center justify-center animate-fade-in">
-          <div className="glass-panel rounded-2xl p-6 w-80 max-w-[90%]">
-            <h2 className="text-2xl font-bold text-white text-center font-arabic mb-6">廿賷賯丕賮 賲丐賯鬲</h2>
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={() => {
-                  setIsPaused(false);
-                  setIsTimerRunning(true);
-                }}
-                className="btn-primary w-full"
-              >
-                丕爻鬲卅賳丕賮
-              </button>
-              <button
-                onClick={() => {
-                  setIsPaused(false);
-                  gameInitialized.current = false;
-                  setScreen('playing');
-                }}
-                className="btn-green w-full"
-              >
-                廿毓丕丿丞 丕賱賱毓亘
-              </button>
-              <button
-                onClick={() => setScreen('settings')}
-                className="btn-blue w-full"
-              >
-                丕賱廿毓丿丕丿丕鬲
-              </button>
-              <button
-                onClick={handleQuit}
-                className="w-full py-3 rounded-xl bg-[#E74C3C] text-white font-bold font-arabic hover:scale-105 transition-transform"
-              >
-                禺乇賵噩
-              </button>
+        {/* Score popup */}
+        {scorePopup && (
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-20">
+            <div className="text-4xl font-bold text-[#C9A84C] animate-bounce">
+              {scorePopup.text}
             </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Pause overlay */}
+        {isPaused && (
+          <div className="absolute inset-0 bg-black/70 z-30 flex items-center justify-center">
+            <div className="glass-panel rounded-2xl p-6 max-w-sm w-full mx-4">
+              <h2 className="text-2xl font-bold text-[#C9A84C] text-center mb-6 font-arabic">廿賷賯丕賮 賲丐賯鬲</h2>
+              <div className="space-y-3">
+                <button
+                  onClick={() => {
+                    setIsPaused(false);
+                    setIsTimerRunning(true);
+                  }}
+                  className="w-full py-3 bg-[#2D8A3E] text-white rounded-lg font-bold font-arabic hover:scale-105 transition-transform"
+                >
+                  丕爻鬲卅賳丕賮
+                </button>
+                <button
+                  onClick={() => {
+                    setIsPaused(false);
+                    setScreen('menu');
+                  }}
+                  className="w-full py-3 bg-[#3D2817] text-[#B8A080] rounded-lg font-bold font-arabic hover:scale-105 transition-transform"
+                >
+                  丕賱禺乇賵噩 賱賱賯丕卅賲丞
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

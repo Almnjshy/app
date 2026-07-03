@@ -84,7 +84,7 @@ export function determineFirstPlayer(players: Player[]): number {
   let lowestTotal = Infinity;
   let lowestPlayer = 0;
   for (let i = 0; i < players.length; i++) {
-    const total = players[i].tiles.reduce((sum, t) => sum + t.total, 0);
+    const total = players[i].tiles.reduce((sum: number, t: Tile) => sum + t.total, 0);
     if (total < lowestTotal) {
       lowestTotal = total;
       lowestPlayer = i;
@@ -100,7 +100,7 @@ export function getPlayableTiles(playerTiles: Tile[], boardTiles: PlacedTile[]):
   const rightEnd = boardTiles[boardTiles.length - 1].connectRight;
 
   return playerTiles.filter(
-    (tile) => tile.top === leftEnd || tile.bottom === leftEnd ||
+    (tile: Tile) => tile.top === leftEnd || tile.bottom === leftEnd ||
               tile.top === rightEnd || tile.bottom === rightEnd
   );
 }
@@ -202,7 +202,7 @@ export function getValidSides(tile: Tile, boardTiles: PlacedTile[]): ('left' | '
 }
 
 export function calculateHandValue(tiles: Tile[]): number {
-  return tiles.reduce((sum, tile) => sum + tile.total, 0);
+  return tiles.reduce((sum: number, tile: Tile) => sum + tile.total, 0);
 }
 
 export function calculateRoundWinner(players: Player[]): { winnerIndex: number; points: number } {
@@ -260,10 +260,10 @@ export function aiSelectTile(
   const playable = getPlayableTiles(playerTiles, boardTiles);
   if (playable.length === 0) return null;
 
-  const settings = {
+  const settings: Record<string, () => Tile> = {
     random: () => playable[Math.floor(Math.random() * playable.length)],
     basic: () => {
-      const doubles = playable.filter((t) => t.isDouble);
+      const doubles = playable.filter((t: Tile) => t.isDouble);
       if (doubles.length > 0) return doubles[Math.floor(Math.random() * doubles.length)];
       return playable[Math.floor(Math.random() * playable.length)];
     },
@@ -273,10 +273,10 @@ export function aiSelectTile(
       for (const tile of playable) {
         let score = tile.total;
         if (tile.isDouble) score += 3;
-        const remaining = playerTiles.filter((t) => t.id !== tile.id);
+        const remaining = playerTiles.filter((t: Tile) => t.id !== tile.id);
         const versatility = remaining.filter(
-          (t) => t.top === tile.top || t.bottom === tile.top ||
-                 t.top === tile.bottom || t.bottom === tile.bottom
+          (t: Tile) => t.top === tile.top || t.bottom === tile.top ||
+          t.top === tile.bottom || t.bottom === tile.bottom
         ).length;
         score += versatility * 2;
         if (score > bestScore) {
@@ -294,10 +294,10 @@ export function aiSelectTile(
         if (tile.isDouble) score += 5;
         const sides = getValidSides(tile, boardTiles);
         if (sides.length === 2) score += 3;
-        const remaining = playerTiles.filter((t) => t.id !== tile.id);
+        const remaining = playerTiles.filter((t: Tile) => t.id !== tile.id);
         const versatility = remaining.filter(
-          (t) => t.top === tile.top || t.bottom === tile.top ||
-                 t.top === tile.bottom || t.bottom === tile.bottom
+          (t: Tile) => t.top === tile.top || t.bottom === tile.top ||
+          t.top === tile.bottom || t.bottom === tile.bottom
         ).length;
         score += versatility * 3;
         if (score > bestScore) {
@@ -318,7 +318,7 @@ export function aiSelectTile(
     },
   };
 
-  const strategy = settings[difficulty as keyof typeof settings] || settings.random;
+  const strategy = settings[difficulty] || settings.random;
   const selected = strategy();
 
   const sides = getValidSides(selected, boardTiles);

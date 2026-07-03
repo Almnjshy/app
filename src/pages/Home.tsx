@@ -6,10 +6,9 @@ import GameScreen from '@/screens/GameScreen'
 import MatchEndScreen from '@/screens/MatchEndScreen'
 import SettingsScreen from '@/screens/SettingsScreen'
 import StatisticsScreen from '@/screens/StatisticsScreen'
-import type { GameState } from '@/store/gameStore'
 
 export default function Home() {
-  const currentScreen = useGameStore((state: GameState) => state.currentScreen)
+  const currentScreen = useGameStore((state) => state.currentScreen)
 
   switch (currentScreen) {
     case 'title':

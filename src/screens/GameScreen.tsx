@@ -186,12 +186,18 @@ export default function GameScreen() {
         setGameMessage('爻丨亘鬲 賯胤毓丞 - 賷賲賰賳賰 丕賱賱毓亘!');
         setTurnTimer(30);
       } else {
-        nextTurn();
+        const nextIndex = (currentPlayerIndex + 1) % players.length;
+        setCurrentPlayerIndex(nextIndex);
+        setPlayers(players.map((p: Player, i: number) => ({ ...p, isActive: i === nextIndex })));
+        setTurnTimer(30);
       }
     } else {
-      nextTurn();
+      const nextIndex = (currentPlayerIndex + 1) % players.length;
+      setCurrentPlayerIndex(nextIndex);
+      setPlayers(players.map((p: Player, i: number) => ({ ...p, isActive: i === nextIndex })));
+      setTurnTimer(30);
     }
-  }, [players, currentPlayerIndex, boneyard, boardTiles, nextTurn]);
+  }, [players, currentPlayerIndex, boneyard, boardTiles]);
 
   const handleAIPlay = useCallback(() => {
     const currentPlayer = players[currentPlayerIndex];
@@ -236,9 +242,12 @@ export default function GameScreen() {
       } else {
         setGameMessage(`${currentPlayer.name} 賲乇乇`);
       }
-      nextTurn();
+      const nextIndex = (currentPlayerIndex + 1) % players.length;
+      setCurrentPlayerIndex(nextIndex);
+      setPlayers(players.map((p: Player, i: number) => ({ ...p, isActive: i === nextIndex })));
+      setTurnTimer(30);
     }
-  }, [players, currentPlayerIndex, boardTiles, boneyard, difficulty, nextTurn]);
+  }, [players, currentPlayerIndex, boardTiles, boneyard, difficulty]);
 
   const checkRoundEnd = useCallback((playerTiles: Tile[], _playerIndex?: number) => {
     if (playerTiles.length === 0) {
@@ -271,7 +280,10 @@ export default function GameScreen() {
       // Start new round
       setTimeout(() => startNewRound(), 2000);
     } else {
-      nextTurn();
+      const nextIndex = (currentPlayerIndex + 1) % players.length;
+      setCurrentPlayerIndex(nextIndex);
+      setPlayers(players.map((p: Player, i: number) => ({ ...p, isActive: i === nextIndex })));
+      setTurnTimer(30);
     }
   }, [players, matchScores, targetScore, currentLevel]);
 
@@ -302,13 +314,6 @@ export default function GameScreen() {
     setTurnTimer(30);
     setIsTimerRunning(true);
   }, [players]);
-
-  const nextTurn = useCallback(() => {
-    const nextIndex = (currentPlayerIndex + 1) % players.length;
-    setCurrentPlayerIndex(nextIndex);
-    setPlayers(players.map((p: Player, i: number) => ({ ...p, isActive: i === nextIndex })));
-    setTurnTimer(30);
-  }, [currentPlayerIndex, players, setTurnTimer]);
 
   const handleTileClick = (tile: Tile) => {
     const currentPlayer = players[currentPlayerIndex];
@@ -359,7 +364,12 @@ export default function GameScreen() {
     if (canPlayTile(drawn, boardTiles)) {
       setGameMessage('賷賲賰賳賰 賱毓亘 丕賱賯胤毓丞 丕賱賲爻丨賵亘丞!');
     } else {
-      setTimeout(() => nextTurn(), 1000);
+      setTimeout(() => {
+        const nextIndex = (currentPlayerIndex + 1) % players.length;
+        setCurrentPlayerIndex(nextIndex);
+        setPlayers(players.map((p: Player, i: number) => ({ ...p, isActive: i === nextIndex })));
+        setTurnTimer(30);
+      }, 1000);
     }
   };
 
@@ -569,7 +579,12 @@ export default function GameScreen() {
           {currentPlayer?.isHuman && playableTiles.length === 0 && boneyard.length === 0 && (
             <div className="text-center mt-2">
               <button
-                onClick={nextTurn}
+                onClick={() => {
+                  const nextIndex = (currentPlayerIndex + 1) % players.length;
+                  setCurrentPlayerIndex(nextIndex);
+                  setPlayers(players.map((p: Player, i: number) => ({ ...p, isActive: i === nextIndex })));
+                  setTurnTimer(30);
+                }}
                 className="px-6 py-2 bg-[#E74C3C] text-white rounded-lg font-bold text-sm font-arabic hover:scale-105 transition-transform"
               >
                 鬲賲乇賷乇

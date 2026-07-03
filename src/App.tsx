@@ -32,7 +32,7 @@ export default function App() {
   };
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-[#1A0E08]">
+    <div className="min-h-screen bg-gray-900 text-white overflow-hidden">
       {renderScreen()}
     </div>
   );

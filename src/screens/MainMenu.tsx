@@ -32,7 +32,7 @@ export default function MainMenu() {
       icon: Wifi,
       gradient: 'from-[#2B5A9E] to-[#1A3A6E]',
       shadow: '#0F2240',
-      onClick: () => setGameMode('network'),
+      onClick: () => setGameMode('online'),
       badge: 'قريباً!',
     },
     {

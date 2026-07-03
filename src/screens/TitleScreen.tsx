@@ -25,147 +25,111 @@ export default function TitleScreen() {
       x: Math.random() * 100,
       y: Math.random() * 100,
       rotation: Math.random() * 360,
-      size: 20 + Math.random() * 30,
-      duration: 8 + Math.random() * 12,
-      delay: Math.random() * 5,
+      size: 20 + Math.random() * 40,
+      duration: 3 + Math.random() * 4,
+      delay: Math.random() * 2,
     }));
     setParticles(newParticles);
   }, []);
 
+  const handleTap = () => {
+    setScreen('menu');
+  };
+
   return (
     <div
-      className="fixed inset-0 flex flex-col items-center justify-center overflow-hidden"
-      onClick={() => setScreen('menu')}
+      className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden cursor-pointer"
+      onClick={handleTap}
     >
-      {/* Background image */}
-      <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage: 'url(/assets/title_bg.jpg)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      />
-
-      {/* Dark overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80" />
+      {/* Background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#1A0E08] via-[#2D1810] to-[#1A0E08]" />
 
       {/* Floating particles */}
       {particles.map((p) => (
         <div
           key={p.id}
-          className="absolute pointer-events-none opacity-20"
+          className="absolute opacity-10"
           style={{
             left: `${p.x}%`,
             top: `${p.y}%`,
-            width: p.size,
-            height: p.size * 2,
-            animation: `float ${p.duration}s ease-in-out ${p.delay}s infinite`,
+            width: `${p.size}px`,
+            height: `${p.size * 1.5}px`,
+            transform: `rotate(${p.rotation}deg)`,
+            animation: `float ${p.duration}s ease-in-out ${p.delay}s infinite alternate`,
           }}
         >
-          <div
-            className="w-full h-full rounded"
-            style={{
-              background: 'linear-gradient(180deg, #C9A84C 0%, #A08030 100%)',
-              transform: `rotate(${p.rotation}deg)`,
-              opacity: 0.3,
-            }}
-          />
+          <div className="w-full h-full bg-[#F5E6D3] rounded-lg" />
         </div>
       ))}
 
-      {/* Content */}
-      <div className="relative z-10 flex flex-col items-center gap-6 px-4">
-        {/* Domino tiles decoration */}
-        <div className="flex items-center gap-4 mb-2">
+      {/* Main content */}
+      <div className="relative z-10 text-center px-6">
+        {/* Domino pieces animation */}
+        <div className="flex items-center justify-center gap-4 mb-8">
           <div
-            className="w-12 h-20 rounded-lg border-2 border-[#C9A84C]/40 flex items-center justify-center"
-            style={{
-              background: 'linear-gradient(180deg, #FFFEF8 0%, #F5EDE0 100%)',
-              transform: 'rotate(-15deg)',
-              boxShadow: '0 4px 15px rgba(0,0,0,0.5)',
-            }}
+            className="w-16 h-24 bg-[#F5E6D3] rounded-lg shadow-2xl transform -rotate-12 animate-float"
+            style={{ animationDelay: '0s' }}
           >
-            <div className="flex flex-col items-center gap-1">
-              <div className="flex gap-2">
-                <div className="w-2 h-2 rounded-full bg-[#1A1A1A]" />
-                <div className="w-2 h-2 rounded-full bg-[#1A1A1A]" />
-              </div>
-              <div className="w-full h-px bg-[#C9A84C]/50" />
-              <div className="flex gap-2">
-                <div className="w-2 h-2 rounded-full bg-[#1A1A1A]" />
-                <div className="w-2 h-2 rounded-full bg-[#1A1A1A]" />
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="grid grid-cols-2 gap-2 p-3">
+                <div className="w-3 h-3 rounded-full bg-[#1A0E08]" />
+                <div className="w-3 h-3 rounded-full bg-[#1A0E08]" />
+                <div className="w-3 h-3 rounded-full bg-[#1A0E08]" />
+                <div className="w-3 h-3 rounded-full bg-[#1A0E08]" />
               </div>
             </div>
           </div>
 
-          {/* Crown */}
-          <div className="text-5xl animate-pulse-glow">👑</div>
+          <div className="text-6xl animate-pulse">馃憫</div>
 
           <div
-            className="w-12 h-20 rounded-lg border-2 border-[#C9A84C]/40 flex items-center justify-center"
-            style={{
-              background: 'linear-gradient(180deg, #FFFEF8 0%, #F5EDE0 100%)',
-              transform: 'rotate(15deg)',
-              boxShadow: '0 4px 15px rgba(0,0,0,0.5)',
-            }}
+            className="w-16 h-24 bg-[#F5E6D3] rounded-lg shadow-2xl transform rotate-12 animate-float"
+            style={{ animationDelay: '0.5s' }}
           >
-            <div className="flex flex-col items-center gap-1">
-              <div className="flex gap-2">
-                <div className="w-2 h-2 rounded-full bg-[#1A1A1A]" />
-                <div className="w-2 h-2 rounded-full bg-[#1A1A1A]" />
-                <div className="w-2 h-2 rounded-full bg-[#1A1A1A]" />
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="grid grid-cols-2 gap-2 p-3">
+                <div className="w-3 h-3 rounded-full bg-[#1A0E08]" />
+                <div className="w-3 h-3 rounded-full bg-[#1A0E08]" />
+                <div className="w-3 h-3 rounded-full bg-[#1A0E08]" />
+                <div className="w-3 h-3 rounded-full bg-[#1A0E08]" />
               </div>
-              <div className="w-full h-px bg-[#C9A84C]/50" />
-              <div className="w-2 h-2 rounded-full bg-[#1A1A1A]" />
             </div>
           </div>
         </div>
 
         {/* Title */}
         <h1
-          className="font-display text-6xl md:text-7xl font-bold tracking-wider gold-text"
-          style={{
-            textShadow: '0 4px 20px rgba(0,0,0,0.8), 0 0 60px rgba(201,168,76,0.3)',
-            letterSpacing: '0.15em',
-          }}
+          className="text-6xl md:text-7xl font-bold text-[#C9A84C] tracking-[0.2em] mb-4"
+          style={{ fontFamily: 'Playfair Display, serif' }}
         >
           DOMINO
         </h1>
 
         {/* Arabic subtitle */}
-        <p
-          className="text-xl text-[#C9A84C]/80 font-arabic font-semibold tracking-widest"
-          style={{ textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}
-        >
-          دومينو
-        </p>
+        <p className="text-2xl text-[#B8A080] font-arabic mb-12">丿賵賲賷賳賵</p>
 
         {/* Tap to start */}
-        <div
-          className={`mt-12 transition-all duration-700 ${
-            showTap ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-          }`}
-        >
-          <p
-            className="text-lg text-white/70 font-arabic animate-pulse cursor-pointer"
-            style={{ textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}
-          >
-            اضغط للبدء
-          </p>
-        </div>
+        {showTap && (
+          <div className="animate-fade-in">
+            <p className="text-[#C9A84C] text-lg font-arabic animate-pulse">
+              丕囟睾胤 賱賱亘丿亍
+            </p>
+            <div className="mt-4 flex justify-center">
+              <div className="w-12 h-12 rounded-full border-2 border-[#C9A84C] flex items-center justify-center animate-bounce">
+                <span className="text-[#C9A84C] text-2xl">鈫�</span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Bottom decorative tiles */}
-      <div className="absolute bottom-8 left-0 right-0 flex justify-center gap-2 opacity-30">
-        {[0, 1, 2, 3, 4].map((i) => (
+      {/* Bottom decoration */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 opacity-20">
+        {[...Array(5)].map((_, i) => (
           <div
             key={i}
-            className="w-6 h-10 rounded border border-[#C9A84C]/30"
-            style={{
-              background: 'linear-gradient(180deg, #FFFEF8 0%, #F5EDE0 100%)',
-              transform: `rotate(${(i - 2) * 8}deg)`,
-            }}
+            className="w-6 h-10 bg-[#F5E6D3] rounded animate-float"
+            style={{ animationDelay: `${i * 0.2}s` }}
           />
         ))}
       </div>

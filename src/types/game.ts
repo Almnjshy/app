@@ -31,24 +31,11 @@ export type ScreenType =
   | 'menu'
   | 'levelSelect'
   | 'playing'
-  | 'paused'
   | 'matchEnd'
   | 'settings'
-  | 'statistics'
-  | 'tutorial';
+  | 'statistics';
 
-export type Difficulty = 'veryEasy' | 'easy' | 'medium' | 'hard' | 'veryHard' | 'expert' | 'champion';
-
-export interface LevelConfig {
-  level: number;
-  name: string;
-  nameAr: string;
-  targetScore: number;
-  aiCount: number;
-  aiDifficulty: Difficulty;
-  description: string;
-  descriptionAr: string;
-}
+export type GameMode = 'ai' | 'tournament' | 'online' | 'local';
 
 export interface GameSettings {
   soundEnabled: boolean;
@@ -67,10 +54,8 @@ export interface GameProgress {
   highestScore: number;
 }
 
-export type PowerUpType = 'peek' | 'undo' | 'extraTime' | 'hint';
-
 export interface PowerUp {
-  type: PowerUpType;
+  type: string;
   name: string;
   nameAr: string;
   icon: string;
@@ -78,30 +63,46 @@ export interface PowerUp {
   maxUses: number;
 }
 
-export type GameMode = 'ai' | 'network' | 'tournament' | 'online';
+export interface LevelConfig {
+  level: number;
+  name: string;
+  nameAr: string;
+  targetScore: number;
+  aiCount: number;
+  aiDifficulty: string;
+  timeLimit: number;
+}
 
 export const LEVELS: LevelConfig[] = [
-  { level: 1, name: 'First Steps', nameAr: 'الخطوات الأولى', targetScore: 50, aiCount: 1, aiDifficulty: 'veryEasy', description: 'Learn the basics', descriptionAr: 'تعلم الأساسيات' },
-  { level: 2, name: 'Apprentice', nameAr: 'المبتدئ', targetScore: 60, aiCount: 1, aiDifficulty: 'easy', description: 'Standard play', descriptionAr: 'لعب قياسي' },
-  { level: 3, name: 'Rising Star', nameAr: 'النجم الصاعد', targetScore: 70, aiCount: 2, aiDifficulty: 'easy', description: '3-player game', descriptionAr: 'لعب 3 لاعبين' },
-  { level: 4, name: 'Challenger', nameAr: 'المتحدي', targetScore: 80, aiCount: 2, aiDifficulty: 'medium', description: 'Tougher opponents', descriptionAr: 'خصوم أقوى' },
-  { level: 5, name: 'Semi-Pro', nameAr: 'نصف محترف', targetScore: 100, aiCount: 3, aiDifficulty: 'medium', description: '4-player game', descriptionAr: 'لعب 4 لاعبين' },
-  { level: 6, name: 'Professional', nameAr: 'المحترف', targetScore: 100, aiCount: 3, aiDifficulty: 'hard', description: 'Smarter AI', descriptionAr: 'ذكاء اصطناعي أذكى' },
-  { level: 7, name: 'Expert', nameAr: 'الخبير', targetScore: 150, aiCount: 3, aiDifficulty: 'hard', description: 'Longer match', descriptionAr: 'مباراة أطول' },
-  { level: 8, name: 'Master', nameAr: 'الماستر', targetScore: 150, aiCount: 3, aiDifficulty: 'veryHard', description: 'Elite opponents', descriptionAr: 'خصوم نخبة' },
-  { level: 9, name: 'Grandmaster', nameAr: 'الغراند ماستر', targetScore: 200, aiCount: 3, aiDifficulty: 'expert', description: 'Marathon match', descriptionAr: 'مباراة ماراثونية' },
-  { level: 10, name: 'Domino King', nameAr: 'ملك الدومينو', targetScore: 200, aiCount: 3, aiDifficulty: 'champion', description: 'Ultimate challenge', descriptionAr: 'التحدي الأخير' },
+  { level: 1, name: 'First Steps', nameAr: 'الخطوات الأولى', targetScore: 50, aiCount: 1, aiDifficulty: 'random', timeLimit: 30 },
+  { level: 2, name: 'The Beginning', nameAr: 'البداية', targetScore: 60, aiCount: 1, aiDifficulty: 'basic', timeLimit: 30 },
+  { level: 3, name: 'Rising Star', nameAr: 'النجم الصاعد', targetScore: 70, aiCount: 1, aiDifficulty: 'basic', timeLimit: 25 },
+  { level: 4, name: 'The Skilled', nameAr: 'الماهر', targetScore: 80, aiCount: 1, aiDifficulty: 'counting', timeLimit: 25 },
+  { level: 5, name: 'Half Expert', nameAr: 'نصف محترف', targetScore: 100, aiCount: 2, aiDifficulty: 'counting', timeLimit: 20 },
+  { level: 6, name: 'The Expert', nameAr: 'المحترف', targetScore: 100, aiCount: 2, aiDifficulty: 'tracking', timeLimit: 20 },
+  { level: 7, name: 'The Master', nameAr: 'الخبير', targetScore: 150, aiCount: 2, aiDifficulty: 'tracking', timeLimit: 15 },
+  { level: 8, name: 'The Champion', nameAr: 'البطل', targetScore: 150, aiCount: 3, aiDifficulty: 'advanced', timeLimit: 15 },
+  { level: 9, name: 'Grandmaster', nameAr: 'الغراند ماستر', targetScore: 200, aiCount: 3, aiDifficulty: 'perfect', timeLimit: 10 },
+  { level: 10, name: 'Domino King', nameAr: 'ملك الدومينو', targetScore: 200, aiCount: 3, aiDifficulty: 'champion', timeLimit: 10 },
 ];
 
-export const AI_NAMES = ['أحمد', 'سامي', 'خالد', 'عمر', 'فهد', 'ناصر', 'سعد', 'ماجد'];
-export const AI_NAMES_EN = ['Ahmed', 'Sami', 'Khaled', 'Omar', 'Fahd', 'Nasser', 'Saad', 'Majid'];
-
-export const DIFFICULTY_SETTINGS: Record<Difficulty, { thinkTimeMin: number; thinkTimeMax: number; mistakeRate: number; strategy: string }> = {
-  veryEasy: { thinkTimeMin: 2000, thinkTimeMax: 3000, mistakeRate: 0.3, strategy: 'random' },
-  easy: { thinkTimeMin: 2000, thinkTimeMax: 3000, mistakeRate: 0.2, strategy: 'basic' },
-  medium: { thinkTimeMin: 3000, thinkTimeMax: 4000, mistakeRate: 0.1, strategy: 'counting' },
-  hard: { thinkTimeMin: 4000, thinkTimeMax: 5000, mistakeRate: 0.05, strategy: 'tracking' },
-  veryHard: { thinkTimeMin: 5000, thinkTimeMax: 6000, mistakeRate: 0.02, strategy: 'advanced' },
-  expert: { thinkTimeMin: 6000, thinkTimeMax: 7000, mistakeRate: 0, strategy: 'perfect' },
-  champion: { thinkTimeMin: 7000, thinkTimeMax: 8000, mistakeRate: 0, strategy: 'champion' },
+export const DIFFICULTY_SETTINGS: Record<string, { thinkTimeMin: number; thinkTimeMax: number }> = {
+  random: { thinkTimeMin: 500, thinkTimeMax: 1500 },
+  basic: { thinkTimeMin: 800, thinkTimeMax: 2000 },
+  counting: { thinkTimeMin: 1000, thinkTimeMax: 2500 },
+  tracking: { thinkTimeMin: 1200, thinkTimeMax: 3000 },
+  advanced: { thinkTimeMin: 1500, thinkTimeMax: 3500 },
+  perfect: { thinkTimeMin: 2000, thinkTimeMax: 4000 },
+  champion: { thinkTimeMin: 2500, thinkTimeMax: 5000 },
 };
+
+export const AI_NAMES = [
+  'أحمد',
+  'محمد',
+  'علي',
+  'خالد',
+  'عمر',
+  'يوسف',
+  'سلطان',
+  'فيصل',
+];

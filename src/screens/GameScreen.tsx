@@ -1,705 +1,173 @@
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useGameStore } from '@/store/gameStore';
-import {
-  generateAllTiles,
-  dealTiles,
-  determineFirstPlayer,
-  getPlayableTiles,
-  canPlayTile,
-  placeTileOnBoard,
-  getValidSides,
-  aiSelectTile,
-  calculateRoundWinner,
-} from '@/lib/gameEngine';
-import { LEVELS, DIFFICULTY_SETTINGS, AI_NAMES } from '@/types/game';
-import type { Tile, Player } from '@/types/game';
-import { DominoTile } from '@/components/DominoTile';
-import { PlayerAvatar } from '@/components/PlayerAvatar';
-import { Board } from '@/components/Board';
-import {
-  Settings,
-  BarChart2,
-  MessageCircle,
-  Smile,
-  Trophy,
-  Undo2,
-  LogOut,
-  Pause,
-  Eye,
-  Clock,
-  Lightbulb,
-} from 'lucide-react';
 
-export default function GameScreen() {
-  const {
-    currentLevel,
-    players,
-    setPlayers,
-    boardTiles,
-    setBoardTiles,
-    boneyard,
-    setBoneyard,
-    currentPlayerIndex,
-    setCurrentPlayerIndex,
-    matchScores,
-    setMatchScores,
-    setTurnTimer,
-    isTimerRunning,
-    setIsTimerRunning,
-    setRoundWinner,
-    matchWinner,
-    setMatchWinner,
-    isPaused,
-    setIsPaused,
-    canUndo,
-    setCanUndo,
-    lastMove,
-    setLastMove,
-    gameMessage,
-    setGameMessage,
-    powerUps,
-    usePowerUp,
-    setScreen,
-    completeLevel,
-  } = useGameStore();
+export default function TitleScreen() {
+  const { setScreen } = useGameStore();
+  const [showTap, setShowTap] = useState(false);
+  const [particles, setParticles] = useState<Array<{
+    id: number;
+    x: number;
+    y: number;
+    rotation: number;
+    size: number;
+    duration: number;
+    delay: number;
+  }>>([]);
 
-  const [selectedTile, setSelectedTile] = useState<Tile | null>(null);
-  const [hintTile, setHintTile] = useState<string | null>(null);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [showChat, setShowChat] = useState(false);
-  const [scorePopup, setScorePopup] = useState<{ text: string; x: number; y: number } | null>(null);
-  const [localTimer, setLocalTimer] = useState(30);
-  const [gameReady, setGameReady] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const aiTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const gameInitialized = useRef(false);
-
-  const levelConfig = LEVELS[currentLevel - 1] || LEVELS[0];
-  const difficulty = levelConfig.aiDifficulty;
-  const targetScore = levelConfig.targetScore;
-
-  // Initialize game
   useEffect(() => {
-    if (gameInitialized.current) return;
-    gameInitialized.current = true;
-
-    const allTiles = generateAllTiles();
-    const tilesPerPlayer = (levelConfig.aiCount + 1) <= 2 ? 7 : 5;
-    const { hands, boneyard: newBoneyard } = dealTiles(allTiles, levelConfig.aiCount + 1, tilesPerPlayer);
-
-    const newPlayers: Player[] = [
-      {
-        id: 'human',
-        name: '兀賳鬲',
-        avatar: '/assets/avatar_player.png',
-        isHuman: true,
-        tiles: hands[0],
-        score: 0,
-        isActive: false,
-        tileCount: hands[0].length,
-      },
-      ...hands.slice(1).map((hand, i) => ({
-        id: `ai-${i}`,
-        name: AI_NAMES[i % AI_NAMES.length],
-        avatar: '/assets/avatar_ai.png',
-        isHuman: false,
-        tiles: hand,
-        score: 0,
-        isActive: false,
-        tileCount: hand.length,
-      })),
-    ];
-
-    setPlayers(newPlayers);
-    setBoneyard(newBoneyard);
-    setBoardTiles([]);
-    setMatchScores(new Array(newPlayers.length).fill(0));
-    setCurrentPlayerIndex(0);
-    setTurnTimer(30);
-    setIsTimerRunning(true);
-    setRoundWinner(null);
-    setMatchWinner(null);
-    setCanUndo(false);
-    setLastMove(null);
-    setGameMessage('');
-    setSelectedTile(null);
-    setGameReady(true);
-
-    const firstPlayer = determineFirstPlayer(newPlayers);
-    setCurrentPlayerIndex(firstPlayer);
-    setPlayers(newPlayers.map((p: Player, i: number) => ({ ...p, isActive: i === firstPlayer })));
+    const timer = setTimeout(() => setShowTap(true), 1500);
+    return () => clearTimeout(timer);
   }, []);
 
-  // Timer
   useEffect(() => {
-    if (!isTimerRunning || isPaused || matchWinner || !gameReady) return;
-
-    setLocalTimer(30);
-    timerRef.current = setInterval(() => {
-      setLocalTimer((prev: number) => {
-        if (prev <= 1) {
-          handleTurnTimeout();
-          return 30;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [isTimerRunning, isPaused, matchWinner, currentPlayerIndex, gameReady]);
-
-  // AI Turn
-  useEffect(() => {
-    if (matchWinner || !gameReady) return;
-
-    const currentPlayer = players[currentPlayerIndex];
-    if (!currentPlayer || currentPlayer.isHuman) return;
-
-    const diffSettings = DIFFICULTY_SETTINGS[difficulty];
-    const thinkTime = diffSettings.thinkTimeMin + Math.random() * (diffSettings.thinkTimeMax - diffSettings.thinkTimeMin);
-
-    aiTimeoutRef.current = setTimeout(() => {
-      handleAIPlay();
-    }, thinkTime);
-
-    return () => {
-      if (aiTimeoutRef.current) clearTimeout(aiTimeoutRef.current);
-    };
-  }, [currentPlayerIndex, players, boardTiles, matchWinner, gameReady]);
-
-  const handleTurnTimeout = useCallback(() => {
-    const currentPlayer = players[currentPlayerIndex];
-    if (!currentPlayer) return;
-
-    if (boneyard.length > 0) {
-      const drawn = boneyard[0];
-      const newBoneyard = boneyard.slice(1);
-      const newTiles = [...currentPlayer.tiles, drawn];
-
-      setBoneyard(newBoneyard);
-      setPlayers(players.map((p: Player, i: number) =>
-        i === currentPlayerIndex ? { ...p, tiles: newTiles, tileCount: newTiles.length } : p
-      ));
-
-      if (canPlayTile(drawn, boardTiles)) {
-        setGameMessage('爻丨亘鬲 賯胤毓丞 - 賷賲賰賳賰 丕賱賱毓亘!');
-        setTurnTimer(30);
-      } else {
-        const nextIndex = (currentPlayerIndex + 1) % players.length;
-        setCurrentPlayerIndex(nextIndex);
-        setPlayers(players.map((p: Player, i: number) => ({ ...p, isActive: i === nextIndex })));
-        setTurnTimer(30);
-      }
-    } else {
-      const nextIndex = (currentPlayerIndex + 1) % players.length;
-      setCurrentPlayerIndex(nextIndex);
-      setPlayers(players.map((p: Player, i: number) => ({ ...p, isActive: i === nextIndex })));
-      setTurnTimer(30);
-    }
-  }, [players, currentPlayerIndex, boneyard, boardTiles]);
-
-  const handleAIPlay = useCallback(() => {
-    const currentPlayer = players[currentPlayerIndex];
-    if (!currentPlayer || currentPlayer.isHuman) return;
-
-    const playable = getPlayableTiles(currentPlayer.tiles, boardTiles);
-
-    if (playable.length > 0) {
-      const move = aiSelectTile(currentPlayer.tiles, boardTiles, difficulty, new Set());
-      if (move) {
-        const newBoard = placeTileOnBoard(move.tile, boardTiles, move.side);
-        const newTiles = currentPlayer.tiles.filter((t: Tile) => t.id !== move.tile.id);
-
-        setBoardTiles(newBoard);
-        setPlayers(players.map((p: Player, i: number) =>
-          i === currentPlayerIndex ? { ...p, tiles: newTiles, tileCount: newTiles.length } : p
-        ));
-        setLastMove({ tile: move.tile, fromBoneyard: false });
-        setCanUndo(false);
-
-        checkRoundEnd(newTiles, currentPlayerIndex);
-      }
-    } else {
-      if (boneyard.length > 0) {
-        const drawn = boneyard[0];
-        const newBoneyard = boneyard.slice(1);
-        const newTiles = [...currentPlayer.tiles, drawn];
-
-        setBoneyard(newBoneyard);
-        setPlayers(players.map((p: Player, i: number) =>
-          i === currentPlayerIndex ? { ...p, tiles: newTiles, tileCount: newTiles.length } : p
-        ));
-
-        if (canPlayTile(drawn, boardTiles)) {
-          setTimeout(() => handleAIPlay(), 1500);
-          return;
-        } else {
-          setGameMessage(`${currentPlayer.name} 爻丨亘 賵賲乇乇`);
-        }
-      } else {
-        setGameMessage(`${currentPlayer.name} 賲乇乇`);
-      }
-      const nextIndex = (currentPlayerIndex + 1) % players.length;
-      setCurrentPlayerIndex(nextIndex);
-      setPlayers(players.map((p: Player, i: number) => ({ ...p, isActive: i === nextIndex })));
-      setTurnTimer(30);
-    }
-  }, [players, currentPlayerIndex, boardTiles, boneyard, difficulty]);
-
-  const checkRoundEnd = useCallback((playerTiles: Tile[], _playerIndex?: number) => {
-    if (playerTiles.length === 0) {
-      const { winnerIndex, points } = calculateRoundWinner(players);
-      const bonus = 10;
-      const totalPoints = points + bonus;
-
-      const newScores = [...matchScores];
-      newScores[winnerIndex] += totalPoints;
-      setMatchScores(newScores);
-
-      setRoundWinner(players[winnerIndex].name);
-      setScorePopup({ text: `+${totalPoints}`, x: 50, y: 50 });
-      setTimeout(() => setScorePopup(null), 2000);
-
-      if (newScores[winnerIndex] >= targetScore) {
-        setMatchWinner(players[winnerIndex].id);
-        setIsTimerRunning(false);
-        if (players[winnerIndex].isHuman) {
-          const margin = newScores[winnerIndex] - Math.max(...newScores.filter((_: number, i: number) => i !== winnerIndex));
-          const stars = margin >= 40 ? 3 : margin >= 20 ? 2 : 1;
-          completeLevel(currentLevel, stars, newScores[winnerIndex]);
-        }
-        setTimeout(() => setScreen('matchEnd'), 2000);
-        return;
-      }
-
-      setTimeout(() => startNewRound(), 2000);
-    } else {
-      const nextIndex = (currentPlayerIndex + 1) % players.length;
-      setCurrentPlayerIndex(nextIndex);
-      setPlayers(players.map((p: Player, i: number) => ({ ...p, isActive: i === nextIndex })));
-      setTurnTimer(30);
-    }
-  }, [players, matchScores, targetScore, currentLevel]);
-
-  const startNewRound = useCallback(() => {
-    const allTiles = generateAllTiles();
-    const tilesPerPlayer = players.length <= 2 ? 7 : 5;
-    const { hands, boneyard: newBoneyard } = dealTiles(allTiles, players.length, tilesPerPlayer);
-
-    const newPlayers = players.map((p: Player, i: number) => ({
-      ...p,
-      tiles: hands[i],
-      tileCount: hands[i].length,
-      isActive: false,
+    const newParticles = Array.from({ length: 15 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      rotation: Math.random() * 360,
+      size: 20 + Math.random() * 30,
+      duration: 8 + Math.random() * 12,
+      delay: Math.random() * 5,
     }));
-
-    setPlayers(newPlayers);
-    setBoneyard(newBoneyard);
-    setBoardTiles([]);
-    setRoundWinner(null);
-    setCanUndo(false);
-    setLastMove(null);
-    setGameMessage('');
-    setSelectedTile(null);
-
-    const firstPlayer = determineFirstPlayer(newPlayers);
-    setCurrentPlayerIndex(firstPlayer);
-    setPlayers(newPlayers.map((p: Player, i: number) => ({ ...p, isActive: i === firstPlayer })));
-    setTurnTimer(30);
-    setIsTimerRunning(true);
-  }, [players]);
-
-  const handleTileClick = (tile: Tile) => {
-    const currentPlayer = players[currentPlayerIndex];
-    if (!currentPlayer?.isHuman || matchWinner) return;
-
-    if (!canPlayTile(tile, boardTiles)) {
-      setGameMessage('賱丕 賷賲賰賳 賱毓亘 賴匕賴 丕賱賯胤毓丞!');
-      setTimeout(() => setGameMessage(''), 1500);
-      return;
-    }
-
-    if (selectedTile?.id === tile.id) {
-      const sides = getValidSides(tile, boardTiles);
-      const side = sides[0] || 'right';
-      const newBoard = placeTileOnBoard(tile, boardTiles, side);
-      const newTiles = currentPlayer.tiles.filter((t: Tile) => t.id !== tile.id);
-
-      setBoardTiles(newBoard);
-      setPlayers(players.map((p: Player, i: number) =>
-        i === currentPlayerIndex ? { ...p, tiles: newTiles, tileCount: newTiles.length } : p
-      ));
-      setLastMove({ tile, fromBoneyard: false });
-      setCanUndo(true);
-      setSelectedTile(null);
-      setHintTile(null);
-
-      checkRoundEnd(newTiles, currentPlayerIndex);
-    } else {
-      setSelectedTile(tile);
-    }
-  };
-
-  const handleDrawFromBoneyard = () => {
-    const currentPlayer = players[currentPlayerIndex];
-    if (!currentPlayer?.isHuman || matchWinner || boneyard.length === 0) return;
-
-    const drawn = boneyard[0];
-    const newBoneyard = boneyard.slice(1);
-    const newTiles = [...currentPlayer.tiles, drawn];
-
-    setBoneyard(newBoneyard);
-    setPlayers(players.map((p: Player, i: number) =>
-      i === currentPlayerIndex ? { ...p, tiles: newTiles, tileCount: newTiles.length } : p
-    ));
-    setLastMove({ tile: drawn, fromBoneyard: true });
-
-    if (canPlayTile(drawn, boardTiles)) {
-      setGameMessage('賷賲賰賳賰 賱毓亘 丕賱賯胤毓丞 丕賱賲爻丨賵亘丞!');
-    } else {
-      setTimeout(() => {
-        const nextIndex = (currentPlayerIndex + 1) % players.length;
-        setCurrentPlayerIndex(nextIndex);
-        setPlayers(players.map((p: Player, i: number) => ({ ...p, isActive: i === nextIndex })));
-        setTurnTimer(30);
-      }, 1000);
-    }
-  };
-
-  const handleUndo = () => {
-    if (!canUndo || !lastMove) return;
-    setCanUndo(false);
-  };
-
-  const handleUsePowerUp = (type: string) => {
-    const powerUp = powerUps.find((p) => p.type === type);
-    if (!powerUp || powerUp.uses <= 0) return;
-
-    usePowerUp(type);
-
-    switch (type) {
-      case 'hint': {
-        const currentPlayer = players[currentPlayerIndex];
-        if (currentPlayer?.isHuman) {
-          const playable = getPlayableTiles(currentPlayer.tiles, boardTiles);
-          if (playable.length > 0) {
-            setHintTile(playable[0].id);
-            setTimeout(() => setHintTile(null), 3000);
-          }
-        }
-        break;
-      }
-      case 'extraTime':
-        setLocalTimer((prev: number) => Math.min(prev + 15, 60));
-        break;
-      case 'peek':
-        setGameMessage('賳馗乇丞 禺丕胤賮丞 毓賱賶 賯胤毓 丕賱禺氐賲...');
-        setTimeout(() => setGameMessage(''), 3000);
-        break;
-    }
-  };
-
-  const handleQuit = () => {
-    setIsPaused(true);
-    setIsTimerRunning(false);
-    setScreen('menu');
-  };
-
-  const timerProgress = localTimer / 30;
-  const currentPlayer = players[currentPlayerIndex];
-  const humanPlayer = players.find((p: Player) => p.isHuman);
-  const playableTiles = humanPlayer ? getPlayableTiles(humanPlayer.tiles, boardTiles) : [];
-
-  const emojis = ['馃榾', '馃槀', '馃槑', '馃槫', '馃憤', '馃憥', '馃帀', '馃槺', '馃敟', '馃拃', '馃帄', '馃'];
-
-  if (!gameReady) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-[#0D7A3A]">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-[#C9A84C] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-white text-lg font-arabic">噩丕乇賷 鬲丨賲賷賱 丕賱賱毓亘丞...</p>
-        </div>
-      </div>
-    );
-  }
+    setParticles(newParticles);
+  }, []);
 
   return (
-    <div className="fixed inset-0 flex flex-col overflow-hidden bg-[#0D7A3A]">
-      {/* Table background */}
+    <div
+      className="fixed inset-0 flex flex-col items-center justify-center overflow-hidden"
+      onClick={() => setScreen('menu')}
+    >
+      {/* Background image */}
       <div
         className="absolute inset-0"
         style={{
-          backgroundImage: 'url(/app/assets/table_bg.jpg)',
+          backgroundImage: 'url(/assets/title_bg.jpg)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/50" />
 
-      {/* Top HUD */}
-      <div className="relative z-10 flex items-center justify-between p-3">
-        {/* Left - Stats */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setIsPaused(true)}
-            className="w-10 h-10 rounded-full glass-panel flex items-center justify-center hover:scale-110 transition-transform"
-          >
-            <Pause className="w-5 h-5 text-[#C9A84C]" />
-          </button>
-          <div className="glass-panel rounded-lg px-3 py-1.5">
-            <div className="flex items-center gap-2">
-              <BarChart2 className="w-4 h-4 text-[#C9A84C]" />
-              <span className="text-white text-sm font-bold">
-                {matchScores[0] || 0}
-              </span>
-            </div>
-          </div>
-        </div>
+      {/* Dark overlay */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80" />
 
-        {/* Center - Score */}
-        <div className="glass-panel rounded-xl px-4 py-2 text-center">
-          <p className="text-[#C9A84C] text-xs font-arabic mb-0.5">
-            賱毓亘 {targetScore} 賳賯胤丞
-          </p>
-          <div className="flex items-center gap-3">
-            <span className="text-green-400 font-bold text-lg">
-              {matchScores[0] || 0}
-            </span>
-            <span className="text-white/50">|</span>
-            <span className="text-red-400 font-bold text-lg">
-              {matchScores[1] || 0}
-            </span>
-          </div>
-        </div>
-
-        {/* Right - Settings */}
-        <div className="flex items-center gap-2">
-          <div className="glass-panel rounded-lg px-3 py-1.5">
-            <span className="text-[#B8A080] text-xs font-arabic">
-              賯胤毓 {boneyard.length}
-            </span>
-          </div>
-          <button
-            onClick={() => setScreen('settings')}
-            className="w-10 h-10 rounded-full glass-panel flex items-center justify-center hover:scale-110 transition-transform"
-          >
-            <Settings className="w-5 h-5 text-[#C9A84C]" />
-          </button>
-        </div>
-      </div>
-
-      {/* Game area */}
-      <div className="relative z-10 flex-1 flex flex-col px-4">
-        {/* Top player (AI) */}
-        {players.length > 1 && (
-          <div className="flex items-center justify-center gap-4 py-2">
-            <PlayerAvatar
-              player={players[1]}
-              isActive={currentPlayerIndex === 1}
-              timerProgress={timerProgress}
-              position="top"
-              tileCount={players[1]?.tileCount}
-            />
-            {players[2] && (
-              <PlayerAvatar
-                player={players[2]}
-                isActive={currentPlayerIndex === 2}
-                timerProgress={timerProgress}
-                position="top"
-                tileCount={players[2]?.tileCount}
-              />
-            )}
-          </div>
-        )}
-
-        {/* Board */}
-        <div className="flex-1 flex items-center justify-center py-2">
-          <Board boardTiles={boardTiles} className="w-full h-full" />
-        </div>
-
-        {/* Bottom player (Human) */}
-        <div className="flex items-center justify-center gap-3 py-2">
-          <PlayerAvatar
-            player={humanPlayer || players[0]}
-            isActive={currentPlayerIndex === 0}
-            timerProgress={timerProgress}
-            position="bottom"
-            showTiles
-            tileCount={humanPlayer?.tiles.length || 0}
+      {/* Floating particles */}
+      {particles.map((p) => (
+        <div
+          key={p.id}
+          className="absolute pointer-events-none opacity-20"
+          style={{
+            left: `${p.x}%`,
+            top: `${p.y}%`,
+            width: p.size,
+            height: p.size * 2,
+            animation: `float ${p.duration}s ease-in-out ${p.delay}s infinite`,
+          }}
+        >
+          <div
+            className="w-full h-full rounded"
+            style={{
+              background: 'linear-gradient(180deg, #C9A84C 0%, #A08030 100%)',
+              transform: `rotate(${p.rotation}deg)`,
+              opacity: 0.3,
+            }}
           />
         </div>
+      ))}
 
-        {/* Game message */}
-        {gameMessage && (
-          <div className="text-center py-1">
-            <span className="text-[#C9A84C] text-sm font-arabic animate-fade-in">
-              {gameMessage}
-            </span>
-          </div>
-        )}
-
-        {/* Player hand */}
-        <div className="py-2">
-          <div className="flex items-center justify-center gap-1 overflow-x-auto pb-2 px-2">
-            {humanPlayer?.tiles.map((tile: Tile) => {
-              const isPlayable = playableTiles.some((t: Tile) => t.id === tile.id);
-              const isSelected = selectedTile?.id === tile.id;
-              const isHint = hintTile === tile.id;
-
-              return (
-                <div
-                  key={tile.id}
-                  className={`flex-shrink-0 transition-all duration-200 ${
-                    isSelected ? '-translate-y-3' : isPlayable ? 'hover:-translate-y-2' : ''
-                  } ${isHint ? 'animate-pulse' : ''}`}
-                  onClick={() => handleTileClick(tile)}
-                >
-                  <DominoTile
-                    tile={tile}
-                    size="sm"
-                    faceUp={true}
-                    selected={isSelected}
-                    playable={isPlayable}
-                  />
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Boneyard draw button */}
-          {currentPlayer?.isHuman && playableTiles.length === 0 && boneyard.length > 0 && (
-            <div className="text-center mt-2">
-              <button
-                onClick={handleDrawFromBoneyard}
-                className="px-6 py-2 bg-[#C9A84C] text-[#1A0E08] rounded-lg font-bold text-sm font-arabic hover:scale-105 transition-transform"
-              >
-                爻丨亘 賯胤毓丞 ({boneyard.length} 賲鬲亘賯賷丞)
-              </button>
-            </div>
-          )}
-
-          {/* Pass button */}
-          {currentPlayer?.isHuman && playableTiles.length === 0 && boneyard.length === 0 && (
-            <div className="text-center mt-2">
-              <button
-                onClick={() => {
-                  const nextIndex = (currentPlayerIndex + 1) % players.length;
-                  setCurrentPlayerIndex(nextIndex);
-                  setPlayers(players.map((p: Player, i: number) => ({ ...p, isActive: i === nextIndex })));
-                  setTurnTimer(30);
-                }}
-                className="px-6 py-2 bg-red-600 text-white rounded-lg font-bold text-sm font-arabic hover:scale-105 transition-transform"
-              >
-                鬲賲乇賷乇
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Power-ups bar */}
-        <div className="flex items-center justify-center gap-2 py-2">
-          {powerUps.map((pu) => (
-            <button
-              key={pu.type}
-              onClick={() => handleUsePowerUp(pu.type)}
-              disabled={pu.uses <= 0}
-              className={`relative w-10 h-10 rounded-lg flex items-center justify-center transition-all ${
-                pu.uses > 0
-                  ? 'bg-[#2A1A10] border border-[#C9A84C] hover:scale-110'
-                  : 'bg-[#1A0E08] border border-[#3D2817] opacity-50'
-              }`}
-            >
-              {pu.type === 'peek' && <Eye className="w-5 h-5 text-[#C9A84C]" />}
-              {pu.type === 'undo' && <Undo2 className="w-5 h-5 text-[#C9A84C]" />}
-              {pu.type === 'extraTime' && <Clock className="w-5 h-5 text-[#C9A84C]" />}
-              {pu.type === 'hint' && <Lightbulb className="w-5 h-5 text-[#C9A84C]" />}
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#C9A84C] text-[#1A0E08] rounded-full text-xs font-bold flex items-center justify-center">
-                {pu.uses}
-              </span>
-            </button>
-          ))}
-        </div>
-
-        {/* Bottom action bar */}
-        <div className="flex items-center justify-center gap-4 py-2">
-          <button
-            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-            className="w-10 h-10 rounded-full glass-panel flex items-center justify-center hover:scale-110 transition-transform"
+      {/* Content */}
+      <div className="relative z-10 flex flex-col items-center gap-6 px-4">
+        {/* Domino tiles decoration */}
+        <div className="flex items-center gap-4 mb-2">
+          <div
+            className="w-12 h-20 rounded-lg border-2 border-[#C9A84C]/40 flex items-center justify-center"
+            style={{
+              background: 'linear-gradient(180deg, #FFFEF8 0%, #F5EDE0 100%)',
+              transform: 'rotate(-15deg)',
+              boxShadow: '0 4px 15px rgba(0,0,0,0.5)',
+            }}
           >
-            <Smile className="w-5 h-5 text-[#C9A84C]" />
-          </button>
-          <button
-            onClick={() => setShowChat(!showChat)}
-            className="w-10 h-10 rounded-full glass-panel flex items-center justify-center hover:scale-110 transition-transform"
-          >
-            <MessageCircle className="w-5 h-5 text-[#C9A84C]" />
-          </button>
-          <button
-            onClick={handleQuit}
-            className="w-10 h-10 rounded-full glass-panel flex items-center justify-center hover:scale-110 transition-transform"
-          >
-            <LogOut className="w-5 h-5 text-red-400" />
-          </button>
-        </div>
-
-        {/* Emoji picker */}
-        {showEmojiPicker && (
-          <div className="absolute bottom-20 left-1/2 -translate-x-1/2 glass-panel rounded-xl p-3 flex flex-wrap gap-2 max-w-[200px] z-20">
-            {emojis.map((emoji) => (
-              <button
-                key={emoji}
-                onClick={() => {
-                  setGameMessage(emoji);
-                  setShowEmojiPicker(false);
-                  setTimeout(() => setGameMessage(''), 2000);
-                }}
-                className="text-2xl hover:scale-125 transition-transform"
-              >
-                {emoji}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Score popup */}
-        {scorePopup && (
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-20">
-            <div className="text-4xl font-bold text-[#C9A84C] animate-bounce">
-              {scorePopup.text}
-            </div>
-          </div>
-        )}
-
-        {/* Pause overlay */}
-        {isPaused && (
-          <div className="absolute inset-0 bg-black/70 z-30 flex items-center justify-center">
-            <div className="glass-panel rounded-2xl p-6 max-w-sm w-full mx-4">
-              <h2 className="text-2xl font-bold text-[#C9A84C] text-center mb-6 font-arabic">廿賷賯丕賮 賲丐賯鬲</h2>
-              <div className="space-y-3">
-                <button
-                  onClick={() => {
-                    setIsPaused(false);
-                    setIsTimerRunning(true);
-                  }}
-                  className="w-full py-3 bg-[#2D8A3E] text-white rounded-lg font-bold font-arabic hover:scale-105 transition-transform"
-                >
-                  丕爻鬲卅賳丕賮
-                </button>
-                <button
-                  onClick={() => {
-                    setIsPaused(false);
-                    setScreen('menu');
-                  }}
-                  className="w-full py-3 bg-[#3D2817] text-[#B8A080] rounded-lg font-bold font-arabic hover:scale-105 transition-transform"
-                >
-                  丕賱禺乇賵噩 賱賱賯丕卅賲丞
-                </button>
+            <div className="flex flex-col items-center gap-1">
+              <div className="flex gap-2">
+                <div className="w-2 h-2 rounded-full bg-[#1A1A1A]" />
+                <div className="w-2 h-2 rounded-full bg-[#1A1A1A]" />
+              </div>
+              <div className="w-full h-px bg-[#C9A84C]/50" />
+              <div className="flex gap-2">
+                <div className="w-2 h-2 rounded-full bg-[#1A1A1A]" />
+                <div className="w-2 h-2 rounded-full bg-[#1A1A1A]" />
               </div>
             </div>
           </div>
-        )}
+
+          {/* Crown */}
+          <div className="text-5xl animate-pulse-glow">馃憫</div>
+
+          <div
+            className="w-12 h-20 rounded-lg border-2 border-[#C9A84C]/40 flex items-center justify-center"
+            style={{
+              background: 'linear-gradient(180deg, #FFFEF8 0%, #F5EDE0 100%)',
+              transform: 'rotate(15deg)',
+              boxShadow: '0 4px 15px rgba(0,0,0,0.5)',
+            }}
+          >
+            <div className="flex flex-col items-center gap-1">
+              <div className="flex gap-2">
+                <div className="w-2 h-2 rounded-full bg-[#1A1A1A]" />
+                <div className="w-2 h-2 rounded-full bg-[#1A1A1A]" />
+                <div className="w-2 h-2 rounded-full bg-[#1A1A1A]" />
+              </div>
+              <div className="w-full h-px bg-[#C9A84C]/50" />
+              <div className="w-2 h-2 rounded-full bg-[#1A1A1A]" />
+            </div>
+          </div>
+        </div>
+
+        {/* Title */}
+        <h1
+          className="font-display text-6xl md:text-7xl font-bold tracking-wider gold-text"
+          style={{
+            textShadow: '0 4px 20px rgba(0,0,0,0.8), 0 0 60px rgba(201,168,76,0.3)',
+            letterSpacing: '0.15em',
+          }}
+        >
+          DOMINO
+        </h1>
+
+        {/* Arabic subtitle */}
+        <p
+          className="text-xl text-[#C9A84C]/80 font-arabic font-semibold tracking-widest"
+          style={{ textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}
+        >
+          丿賵賲賷賳賵
+        </p>
+
+        {/* Tap to start */}
+        <div
+          className={`mt-12 transition-all duration-700 ${
+            showTap ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+          }`}
+        >
+          <p
+            className="text-lg text-white/70 font-arabic animate-pulse cursor-pointer"
+            style={{ textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}
+          >
+            丕囟睾胤 賱賱亘丿亍
+          </p>
+        </div>
+      </div>
+
+      {/* Bottom decorative tiles */}
+      <div className="absolute bottom-8 left-0 right-0 flex justify-center gap-2 opacity-30">
+        {[0, 1, 2, 3, 4].map((i) => (
+          <div
+            key={i}
+            className="w-6 h-10 rounded border border-[#C9A84C]/30"
+            style={{
+              background: 'linear-gradient(180deg, #FFFEF8 0%, #F5EDE0 100%)',
+              transform: `rotate(${(i - 2) * 8}deg)`,
+            }}
+          />
+        ))}
       </div>
     </div>
   );

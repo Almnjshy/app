@@ -1,5 +1,6 @@
 import { useGameStore } from '@/store/gameStore';
 import { Star, RotateCcw, Home, ChevronLeft } from 'lucide-react';
+import type { Player } from '@/types/game';
 
 export default function MatchEndScreen() {
   const {
@@ -8,188 +9,122 @@ export default function MatchEndScreen() {
     players,
     currentLevel,
     setScreen,
+    setCurrentLevel,
+    resetMatch,
+    completeLevel,
   } = useGameStore();
 
-  const humanPlayer = players.find((p) => p.isHuman);
+  const humanPlayer = players.find((p: Player) => p.isHuman);
   const humanWon = humanPlayer?.id === matchWinner;
-  const humanScore = matchScores[0] || 0;
-  const aiScore = Math.max(...matchScores.slice(1));
-  const margin = humanScore - aiScore;
-
-  const stars = humanWon ? (margin >= 40 ? 3 : margin >= 20 ? 2 : 1) : 0;
-
-  const handleNextLevel = () => {
-    if (humanWon && currentLevel < 10) {
-      setScreen('levelSelect');
-    } else {
-      setScreen('menu');
-    }
-  };
-
-  const handleReplay = () => {
-    setScreen('playing');
-  };
+  const winnerIndex = players.findIndex((p: Player) => p.id === matchWinner);
+  const margin = winnerIndex >= 0 ? matchScores[winnerIndex] - Math.max(...matchScores.filter((_: number, i: number) => i !== winnerIndex)) : 0;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center overflow-hidden">
-      {/* Background */}
-      <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage: 'url(/assets/wood_panel.jpg)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      />
-      <div className={`absolute inset-0 ${humanWon ? 'bg-black/60' : 'bg-black/70'}`} />
-
-      {/* Confetti effect for win */}
-      {humanWon && (
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {Array.from({ length: 30 }, (_, i) => (
-            <div
-              key={i}
-              className="absolute"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: -20,
-                animation: `confetti ${3 + Math.random() * 4}s linear ${Math.random() * 2}s infinite`,
-              }}
-            >
-              <div
-                className="w-3 h-3 rounded-sm"
-                style={{
-                  background: ['#C9A84C', '#2ECC40', '#E74C3C', '#2B5A9E', '#6B3FA0'][Math.floor(Math.random() * 5)],
-                  transform: `rotate(${Math.random() * 360}deg)`,
-                }}
-              />
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Content */}
-      <div className="relative z-10 flex flex-col items-center w-full max-w-md px-6">
-        {/* Trophy or result */}
-        <div className="mb-4">
-          {humanWon ? (
-            <img
-              src="/assets/trophy.png"
-              alt="Trophy"
-              className="w-24 h-24 object-contain animate-bounce"
-              style={{ filter: 'drop-shadow(0 0 20px rgba(201,168,76,0.6))' }}
-            />
-          ) : (
-            <div className="w-24 h-24 rounded-full bg-[#E74C3C]/20 flex items-center justify-center">
-              <span className="text-5xl">😔</span>
-            </div>
-          )}
-        </div>
-
-        {/* Result text */}
-        <h1
-          className={`text-4xl font-bold font-arabic mb-2 ${
-            humanWon ? 'gold-text' : 'text-[#E74C3C]'
-          }`}
-        >
-          {humanWon ? 'فزت!' : 'خسرت!'}
-        </h1>
-
-        {/* Level name */}
-        <p className="text-[#B8A080] text-sm font-arabic mb-6">
-          المرحلة {currentLevel}
-        </p>
-
-        {/* Stars */}
+    <div className="min-h-screen bg-gradient-to-b from-[#1A0E08] to-[#2D1810] flex items-center justify-center p-4">
+      <div className="max-w-md w-full">
+        {/* Confetti effect */}
         {humanWon && (
-          <div className="flex items-center gap-3 mb-6">
-            {[1, 2, 3].map((s) => (
-              <Star
-                key={s}
-                className={`w-10 h-10 transition-all duration-500 ${
-                  s <= stars
-                    ? 'text-[#C9A84C] fill-[#C9A84C] scale-100'
-                    : 'text-white/20 scale-75'
-                }`}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            {Array.from({ length: 30 }, (_: number, i: number) => (
+              <div
+                key={i}
+                className="absolute w-2 h-2 rounded-full animate-confetti"
                 style={{
-                  animation: s <= stars ? `scaleIn 0.5s ease-out ${s * 0.3}s both` : 'none',
-                  filter: s <= stars ? 'drop-shadow(0 0 8px rgba(201,168,76,0.6))' : 'none',
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                  backgroundColor: ['#C9A84C', '#E74C3C', '#3498DB', '#2ECC71', '#F39C12'][i % 5],
+                  animationDelay: `${Math.random() * 2}s`,
                 }}
               />
             ))}
           </div>
         )}
 
-        {/* Score panel */}
-        <div className="wood-panel rounded-xl p-4 w-full mb-6">
-          <h3 className="text-[#C9A84C] text-sm font-arabic text-center mb-3">النتيجة النهائية</h3>
-          <div className="space-y-2">
-            {players.map((player, i) => (
-              <div
-                key={player.id}
-                className={`flex items-center justify-between p-2 rounded-lg ${
-                  player.id === matchWinner ? 'bg-[#C9A84C]/20' : 'bg-white/5'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <img
-                    src={player.avatar}
-                    alt={player.name}
-                    className="w-8 h-8 rounded-full object-cover"
-                  />
-                  <span className="text-white text-sm font-arabic">{player.name}</span>
-                </div>
-                <span className={`font-bold ${player.id === matchWinner ? 'text-[#C9A84C]' : 'text-white'}`}>
-                  {matchScores[i] || 0}
-                </span>
+        {/* Content */}
+        <div className="glass-panel rounded-2xl p-6 text-center relative z-10">
+          {/* Trophy or result */}
+          <div className="mb-4">
+            {humanWon ? (
+              <div className="text-6xl animate-bounce">馃弳</div>
+            ) : (
+              <div className="text-6xl">馃様</div>
+            )}
+          </div>
+
+          {/* Result text */}
+          <h1 className={`text-3xl font-bold font-arabic mb-2 ${humanWon ? 'text-[#C9A84C]' : 'text-white'}`}>
+            {humanWon ? '賮夭鬲!' : '禺爻乇鬲!'}
+          </h1>
+
+          {/* Level name */}
+          <p className="text-white/70 font-arabic mb-4">
+            丕賱賲乇丨賱丞 {currentLevel}
+          </p>
+
+          {/* Stars */}
+          {humanWon && (
+            <div className="flex justify-center gap-2 mb-4">
+              {[1, 2, 3].map((s: number) => (
+                <Star
+                  key={s}
+                  className={`w-8 h-8 ${s <= (margin >= 40 ? 3 : margin >= 20 ? 2 : 1) ? 'text-[#C9A84C] fill-[#C9A84C]' : 'text-white/30'}`}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Score panel */}
+          <div className="bg-[#2D1810]/50 rounded-xl p-4 mb-4">
+            <h3 className="text-[#C9A84C] font-bold font-arabic mb-2">丕賱賳鬲賷噩丞 丕賱賳賴丕卅賷丞</h3>
+            {players.map((player: Player, i: number) => (
+              <div key={player.id} className="flex justify-between items-center py-1">
+                <span className="text-white font-arabic">{player.name}</span>
+                <span className="text-[#C9A84C] font-bold">{matchScores[i] || 0}</span>
               </div>
             ))}
           </div>
 
           {/* Margin */}
           {humanWon && (
-            <div className="mt-3 pt-3 border-t border-[#C9A84C]/20 text-center">
-              <span className="text-[#C9A84C] text-sm font-arabic">
-                فارق النقاط: +{margin}
-              </span>
-            </div>
+            <p className="text-green-400 font-arabic mb-4">
+              賮丕乇賯 丕賱賳賯丕胤: +{margin}
+            </p>
           )}
-        </div>
 
-        {/* Buttons */}
-        <div className="flex flex-col gap-3 w-full">
-          {humanWon && currentLevel < 10 && (
+          {/* Buttons */}
+          <div className="flex flex-col gap-2">
             <button
-              onClick={handleNextLevel}
+              onClick={() => {
+                resetMatch();
+                setScreen('playing');
+              }}
               className="btn-primary w-full flex items-center justify-center gap-2"
             >
-              <ChevronLeft className="w-5 h-5" />
-              المرحلة التالية
+              <RotateCcw className="w-4 h-4" />
+              廿毓丕丿丞 丕賱賱毓亘
             </button>
-          )}
-          <button
-            onClick={handleReplay}
-            className="btn-green w-full flex items-center justify-center gap-2"
-          >
-            <RotateCcw className="w-5 h-5" />
-            إعادة اللعب
-          </button>
-          <button
-            onClick={() => setScreen('menu')}
-            className="w-full py-3 rounded-xl bg-white/10 text-white font-bold font-arabic hover:bg-white/20 transition-colors flex items-center justify-center gap-2"
-          >
-            <Home className="w-5 h-5" />
-            القائمة الرئيسية
-          </button>
+            {humanWon && currentLevel < 10 && (
+              <button
+                onClick={() => {
+                  setCurrentLevel(currentLevel + 1);
+                  resetMatch();
+                  setScreen('playing');
+                }}
+                className="btn-green w-full"
+              >
+                丕賱賲乇丨賱丞 丕賱鬲丕賱賷丞
+              </button>
+            )}
+            <button
+              onClick={() => setScreen('menu')}
+              className="btn-blue w-full flex items-center justify-center gap-2"
+            >
+              <Home className="w-4 h-4" />
+              丕賱賯丕卅賲丞 丕賱乇卅賷爻賷丞
+            </button>
+          </div>
         </div>
       </div>
-
-      <style>{`
-        @keyframes confetti {
-          0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
-          100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-        }
-      `}</style>
     </div>
   );
 }

@@ -3,41 +3,19 @@ import { LEVELS } from '@/types/game';
 import { Lock, Star, ChevronLeft } from 'lucide-react';
 
 export default function LevelSelect() {
-  const { setScreen, setCurrentLevel, progress, setScreen: setScreenFn } = useGameStore();
-
-  const handleLevelClick = (level: number) => {
-    if (level > progress.unlockedLevel) return;
-    setCurrentLevel(level);
-    setScreenFn('playing');
-  };
+  const { setScreen, progress, setCurrentLevel } = useGameStore();
 
   return (
-    <div className="fixed inset-0 flex flex-col overflow-hidden">
-      {/* Background */}
-      <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage: 'url(/assets/wood_panel.jpg)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/80" />
-
-      {/* Header */}
-      <div className="relative z-10 flex items-center gap-4 p-4">
-        <button
-          onClick={() => setScreen('menu')}
-          className="w-10 h-10 rounded-full glass-panel flex items-center justify-center hover:scale-110 transition-transform"
-        >
-          <ChevronLeft className="w-6 h-6 text-[#C9A84C]" />
+    <div className="min-h-screen bg-gradient-to-b from-[#1A0E08] to-[#2D1810] p-4">
+      <div className="max-w-md mx-auto">
+        <button onClick={() => setScreen('menu')} className="mb-4 flex items-center gap-2 text-[#C9A84C]">
+          <ChevronLeft className="w-5 h-5" />
+          <span className="font-arabic">رجوع</span>
         </button>
-        <h1 className="text-2xl font-bold text-white font-arabic">اختر المرحلة</h1>
-      </div>
 
-      {/* Level Grid */}
-      <div className="relative z-10 flex-1 px-6 py-4 overflow-y-auto">
-        <div className="grid grid-cols-2 gap-4">
+        <h1 className="text-2xl font-bold text-white text-center font-arabic mb-6">اختر المرحلة</h1>
+
+        <div className="grid grid-cols-2 gap-3">
           {LEVELS.map((level) => {
             const isUnlocked = level.level <= progress.unlockedLevel;
             const stars = progress.levelStars[level.level] || 0;
@@ -57,80 +35,40 @@ export default function LevelSelect() {
             return (
               <button
                 key={level.level}
-                onClick={() => handleLevelClick(level.level)}
                 disabled={!isUnlocked}
-                className={`relative p-4 rounded-2xl transition-all duration-200 ${
-                  isUnlocked
-                    ? 'hover:scale-[1.03] active:scale-[0.97] cursor-pointer'
-                    : 'opacity-50 cursor-not-allowed'
-                }`}
-                style={{
-                  background: isUnlocked
-                    ? `linear-gradient(135deg, ${levelColors[level.level - 1].replace('from-', '').replace(' to-', ' 0%, ').split(' ')[0]} 0%, ${levelColors[level.level - 1].replace('from-', '').replace(' to-', ' 0%, ').split(' ').pop()} 100%)`
-                    : 'linear-gradient(135deg, #3a3a3a 0%, #2a2a2a 100%)',
-                  boxShadow: isUnlocked
-                    ? '0 4px 0 rgba(0,0,0,0.4), 0 6px 20px rgba(0,0,0,0.3)'
-                    : 'none',
+                onClick={() => {
+                  if (isUnlocked) {
+                    setCurrentLevel(level.level);
+                    setScreen('playing');
+                  }
                 }}
+                className={`relative rounded-xl p-4 bg-gradient-to-br ${levelColors[level.level - 1]} ${
+                  !isUnlocked ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105 transition-transform'
+                }`}
               >
-                {/* Level number */}
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-3xl font-bold text-white">{level.level}</span>
-                  {!isUnlocked && (
-                    <Lock className="w-5 h-5 text-white/50" />
-                  )}
-                </div>
-
-                {/* Level name */}
-                <h3 className="text-white font-bold text-sm font-arabic text-right mb-1">
-                  {level.nameAr}
-                </h3>
-
-                {/* Target score */}
-                <p className="text-white/60 text-xs font-arabic text-right">
-                  {level.targetScore} نقطة
-                </p>
-
-                {/* Stars */}
-                {isUnlocked && (
-                  <div className="flex justify-end gap-1 mt-2">
-                    {[1, 2, 3].map((s) => (
-                      <Star
-                        key={s}
-                        className={`w-4 h-4 ${
-                          s <= stars ? 'text-[#C9A84C] fill-[#C9A84C]' : 'text-white/20'
-                        }`}
-                      />
-                    ))}
+                {!isUnlocked && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Lock className="w-8 h-8 text-white/50" />
                   </div>
                 )}
-
-                {/* Active indicator */}
-                {isUnlocked && level.level === progress.unlockedLevel && (
-                  <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#C9A84C] animate-pulse" />
-                )}
+                <div className="text-white">
+                  <div className="text-2xl font-bold">{level.level}</div>
+                  <div className="text-sm font-arabic">{level.nameAr}</div>
+                  <div className="text-xs opacity-80">{level.targetScore} نقطة</div>
+                  {isUnlocked && (
+                    <div className="flex gap-1 mt-2">
+                      {[1, 2, 3].map((s: number) => (
+                        <Star
+                          key={s}
+                          className={`w-4 h-4 ${s <= stars ? 'text-yellow-300 fill-yellow-300' : 'text-white/30'}`}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
               </button>
             );
           })}
-        </div>
-      </div>
-
-      {/* Progress summary */}
-      <div className="relative z-10 p-4">
-        <div className="glass-panel rounded-xl p-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Star className="w-5 h-5 text-[#C9A84C] fill-[#C9A84C]" />
-            <span className="text-white font-bold">
-              {Object.values(progress.levelStars).reduce((a, b) => a + b, 0)}
-            </span>
-          </div>
-          <span className="text-[#B8A080] text-sm font-arabic">
-            من أصل {progress.unlockedLevel * 3} نجمة
-          </span>
-          <div className="flex items-center gap-2">
-            <span className="text-[#C9A84C] font-bold">{progress.unlockedLevel}</span>
-            <span className="text-[#B8A080] text-sm font-arabic">/ 10 مراحل</span>
-          </div>
         </div>
       </div>
     </div>

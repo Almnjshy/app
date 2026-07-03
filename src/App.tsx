@@ -12,22 +12,14 @@ export default function App() {
 
   const renderScreen = () => {
     switch (currentScreen) {
-      case 'title':
-        return <TitleScreen />;
-      case 'menu':
-        return <MainMenu />;
-      case 'levelSelect':
-        return <LevelSelect />;
-      case 'playing':
-        return <GameScreen />;
-      case 'matchEnd':
-        return <MatchEndScreen />;
-      case 'settings':
-        return <SettingsScreen />;
-      case 'statistics':
-        return <StatisticsScreen />;
-      default:
-        return <TitleScreen />;
+      case 'title': return <TitleScreen />;
+      case 'menu': return <MainMenu />;
+      case 'levelSelect': return <LevelSelect />;
+      case 'playing': return <GameScreen />;
+      case 'matchEnd': return <MatchEndScreen />;
+      case 'settings': return <SettingsScreen />;
+      case 'statistics': return <StatisticsScreen />;
+      default: return <TitleScreen />;
     }
   };
 

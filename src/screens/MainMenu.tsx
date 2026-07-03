@@ -18,8 +18,8 @@ export default function MainMenu() {
   const buttons = [
     {
       id: 'ai',
-      label: 'ضد الذكاء الاصطناعي',
-      sublabel: 'تحدي الكمبيوتر في مباراة كلاسيكية',
+      label: '囟丿 丕賱匕賰丕亍 丕賱丕氐胤賳丕毓賷',
+      sublabel: '鬲丨丿賷 丕賱賰賲亘賷賵鬲乇 賮賷 賲亘丕乇丕丞 賰賱丕爻賷賰賷丞',
       icon: Bot,
       gradient: 'from-[#2D8A3E] to-[#1A5C28]',
       shadow: '#0F3D18',
@@ -27,18 +27,18 @@ export default function MainMenu() {
     },
     {
       id: 'network',
-      label: 'اللعب عبر الشبكة',
-      sublabel: 'تواصل مع الأصدقاء عبر WiFi',
+      label: '丕賱賱毓亘 毓亘乇 丕賱卮亘賰丞',
+      sublabel: '鬲賵丕氐賱 賲毓 丕賱兀氐丿賯丕亍 毓亘乇 WiFi',
       icon: Wifi,
       gradient: 'from-[#2B5A9E] to-[#1A3A6E]',
       shadow: '#0F2240',
       onClick: () => setGameMode('network'),
-      badge: 'جديد!',
+      badge: '噩丿賷丿!',
     },
     {
       id: 'tournament',
-      label: 'بطولة',
-      sublabel: 'تنافس في بطولة متعددة الجولات',
+      label: '亘胤賵賱丞',
+      sublabel: '鬲賳丕賮爻 賮賷 亘胤賵賱丞 賲鬲毓丿丿丞 丕賱噩賵賱丕鬲',
       icon: Trophy,
       gradient: 'from-[#6B3FA0] to-[#4A2870]',
       shadow: '#2E1848',
@@ -46,8 +46,8 @@ export default function MainMenu() {
     },
     {
       id: 'online',
-      label: 'اونلاين',
-      sublabel: 'العب ضد لاعبين حقيقيين',
+      label: '丕賵賳賱丕賷賳',
+      sublabel: '丕賱毓亘 囟丿 賱丕毓亘賷賳 丨賯賷賯賷賷賳',
       icon: Globe,
       gradient: 'from-[#C9A84C] to-[#A08030]',
       shadow: '#7A6020',
@@ -76,9 +76,9 @@ export default function MainMenu() {
         >
           <BarChart2 className="w-6 h-6 text-[#C9A84C]" />
         </button>
-        <h2 className="text-[#B8A080] text-sm font-arabic">الإحصائيات</h2>
+        <h2 className="text-[#B8A080] text-sm font-arabic">丕賱廿丨氐丕卅賷丕鬲</h2>
         <div className="flex-1" />
-        <h2 className="text-[#B8A080] text-sm font-arabic">الإعدادات</h2>
+        <h2 className="text-[#B8A080] text-sm font-arabic">丕賱廿毓丿丕丿丕鬲</h2>
         <button
           onClick={() => setScreen('settings')}
           className="w-12 h-12 rounded-full glass-panel flex items-center justify-center hover:scale-110 transition-transform"
@@ -111,7 +111,7 @@ export default function MainMenu() {
             </div>
           </div>
 
-          <div className="text-3xl">👑</div>
+          <div className="text-3xl">馃憫</div>
 
           <div
             className="w-10 h-16 rounded-lg border-2 border-[#C9A84C]/50 flex items-center justify-center tile-3d"
@@ -133,7 +133,7 @@ export default function MainMenu() {
         </div>
 
         <h1 className="font-display text-4xl font-bold gold-text tracking-wider">DOMINO</h1>
-        <p className="text-[#B8A080] text-sm mt-1 font-arabic">اختر وضع اللعب</p>
+        <p className="text-[#B8A080] text-sm mt-1 font-arabic">丕禺鬲乇 賵囟毓 丕賱賱毓亘</p>
       </div>
 
       {/* Buttons */}
@@ -144,7 +144,7 @@ export default function MainMenu() {
             onClick={btn.onClick}
             className={`relative w-full p-4 rounded-2xl text-right transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]`}
             style={{
-              background: `linear-gradient(135deg, ${btn.gradient.includes('from-') ? '' : ''}${btn.gradient.split(' ')[0].replace('from-', '')} 0%, ${btn.gradient.split(' ')[2].replace('to-', '')} 100%)`,
+              background: `linear-gradient(135deg, ${btn.gradient.includes('from-') ? '' : ''}${btn.gradient?.split(' ')[0]?.replace('from-', '') || ''} 0%, ${btn.gradient?.split(' ')[2]?.replace('to-', '') || ''} 100%)`,
               boxShadow: `0 4px 0 ${btn.shadow}, 0 6px 20px rgba(0,0,0,0.4)`,
             }}
           >
@@ -162,7 +162,7 @@ export default function MainMenu() {
                 <p className="text-white/60 text-sm font-arabic">{btn.sublabel}</p>
               </div>
               <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-                <span className="text-white/70 text-lg">‹</span>
+                <span className="text-white/70 text-lg">鈥�</span>
               </div>
             </div>
           </button>

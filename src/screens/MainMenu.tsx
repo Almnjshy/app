@@ -18,8 +18,8 @@ export default function MainMenu() {
   const buttons = [
     {
       id: 'ai',
-      label: '賱毓亘 囟丿 丕賱賰賲亘賷賵鬲乇',
-      sublabel: '鬲丨丿賷 丕賱賰賲亘賷賵鬲乇 賮賷 賲亘丕乇丕丞 賰賱丕爻賷賰賷丞',
+      label: 'لعب ضد الكمبيوتر',
+      sublabel: 'تحدي الكمبيوتر في مباراة كلاسيكية',
       icon: Bot,
       gradient: 'from-[#2D8A3E] to-[#1A5C28]',
       shadow: '#0F3D18',
@@ -27,139 +27,174 @@ export default function MainMenu() {
     },
     {
       id: 'network',
-      label: '丕賱賱毓亘 毓亘乇 丕賱卮亘賰丞',
-      sublabel: '鬲賵丕氐賱 賲毓 丕賱兀氐丿賯丕亍 毓亘乇 WiFi',
+      label: 'اللعب عبر الشبكة',
+      sublabel: 'تواصل مع الأصدقاء عبر WiFi',
       icon: Wifi,
-      gradient: 'from-[#2563EB] to-[#1D4ED8]',
-      shadow: '#1E3A5F',
-      badge: '賯乇賷亘丕賸!',
-      disabled: true,
+      gradient: 'from-[#2B5A9E] to-[#1A3A6E]',
+      shadow: '#0F2240',
+      onClick: () => setGameMode('network'),
+      badge: 'قريباً!',
     },
     {
       id: 'tournament',
-      label: '亘胤賵賱丞',
-      sublabel: '鬲賳丕賮爻 賮賷 亘胤賵賱丞 賲鬲毓丿丿丞 丕賱噩賵賱丕鬲',
+      label: 'بطولة',
+      sublabel: 'تنافس في بطولة متعددة الجولات',
       icon: Trophy,
-      gradient: 'from-[#7C3AED] to-[#5B21B6]',
-      shadow: '#4C1D95',
+      gradient: 'from-[#6B3FA0] to-[#4A2870]',
+      shadow: '#2E1848',
       onClick: handlePlayTournament,
     },
     {
       id: 'online',
-      label: '兀賵賳賱丕賷賳',
-      sublabel: '丕賱毓亘 囟丿 賱丕毓亘賷賳 丨賯賷賯賷賷賳',
+      label: 'أونلاين',
+      sublabel: 'العب ضد لاعبين حقيقيين',
       icon: Globe,
-      gradient: 'from-[#DC2626] to-[#991B1B]',
-      shadow: '#7F1D1D',
-      badge: '賯乇賷亘丕賸!',
-      disabled: true,
+      gradient: 'from-[#C9A84C] to-[#A08030]',
+      shadow: '#7A6020',
+      onClick: () => setGameMode('online'),
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1A0E08] to-[#2D1810] flex flex-col">
+    <div className="fixed inset-0 flex flex-col overflow-hidden">
+      {/* Background */}
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: 'url(/assets/wood_panel.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80" />
+
       {/* Top bar */}
-      <div className="flex items-center justify-between p-4">
+      <div className="relative z-10 flex items-center justify-between p-4">
+        <button
+          onClick={() => setScreen('statistics')}
+          className="w-12 h-12 rounded-full glass-panel flex items-center justify-center hover:scale-110 transition-transform"
+        >
+          <BarChart2 className="w-6 h-6 text-[#C9A84C]" />
+        </button>
+        <h2 className="text-[#B8A080] text-sm font-arabic">丕賱廿丨氐丕卅賷丕鬲</h2>
+        <div className="flex-1" />
+        <h2 className="text-[#B8A080] text-sm font-arabic">丕賱廿毓丿丕丿丕鬲</h2>
         <button
           onClick={() => setScreen('settings')}
-          className="w-12 h-12 rounded-full bg-[#2A1A10] border border-[#3D2817] flex items-center justify-center hover:scale-110 transition-transform"
+          className="w-12 h-12 rounded-full glass-panel flex items-center justify-center hover:scale-110 transition-transform"
         >
           <Settings className="w-6 h-6 text-[#C9A84C]" />
         </button>
-        <div className="flex gap-3">
-          <button
-            onClick={() => setScreen('statistics')}
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#2A1A10] border border-[#3D2817] text-[#B8A080] hover:scale-105 transition-transform"
-          >
-            <BarChart2 className="w-4 h-4" />
-            <span className="text-sm font-arabic">丕賱廿丨氐丕卅賷丕鬲</span>
-          </button>
-          <button
-            onClick={() => setScreen('settings')}
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#2A1A10] border border-[#3D2817] text-[#B8A080] hover:scale-105 transition-transform"
-          >
-            <Settings className="w-4 h-4" />
-            <span className="text-sm font-arabic">丕賱廿毓丿丕丿丕鬲</span>
-          </button>
-        </div>
       </div>
 
-      {/* Logo */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6">
-        <div className="relative mb-8">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-24 bg-[#F5E6D3] rounded-lg shadow-lg transform -rotate-12 flex items-center justify-center">
-              <div className="grid grid-cols-2 gap-1">
-                <div className="w-2 h-2 rounded-full bg-[#1A0E08]" />
-                <div className="w-2 h-2 rounded-full bg-[#1A0E08]" />
-                <div className="w-2 h-2 rounded-full bg-[#1A0E08]" />
-                <div className="w-2 h-2 rounded-full bg-[#1A0E08]" />
+      {/* Title */}
+      <div className="relative z-10 flex flex-col items-center mt-4 mb-6">
+        {/* Domino tiles decoration */}
+        <div className="flex items-center gap-3 mb-3">
+          <div
+            className="w-10 h-16 rounded-lg border-2 border-[#C9A84C]/50 flex items-center justify-center tile-3d"
+            style={{
+              background: 'linear-gradient(180deg, #FFFEF8 0%, #F5EDE0 100%)',
+              transform: 'rotate(-12deg)',
+            }}
+          >
+            <div className="flex flex-col items-center gap-0.5">
+              <div className="flex gap-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#1A1A1A]" />
+                <div className="w-1.5 h-1.5 rounded-full bg-[#1A1A1A]" />
+              </div>
+              <div className="w-full h-px bg-[#C9A84C]/50" />
+              <div className="flex gap-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#1A1A1A]" />
+                <div className="w-1.5 h-1.5 rounded-full bg-[#1A1A1A]" />
               </div>
             </div>
-            <div className="text-6xl">馃憫</div>
-            <div className="w-16 h-24 bg-[#F5E6D3] rounded-lg shadow-lg transform rotate-12 flex items-center justify-center">
-              <div className="grid grid-cols-2 gap-1">
-                <div className="w-2 h-2 rounded-full bg-[#1A0E08]" />
-                <div className="w-2 h-2 rounded-full bg-[#1A0E08]" />
-                <div className="w-2 h-2 rounded-full bg-[#1A0E08]" />
-                <div className="w-2 h-2 rounded-full bg-[#1A0E08]" />
+          </div>
+
+          <div className="text-3xl">馃憫</div>
+
+          <div
+            className="w-10 h-16 rounded-lg border-2 border-[#C9A84C]/50 flex items-center justify-center tile-3d"
+            style={{
+              background: 'linear-gradient(180deg, #FFFEF8 0%, #F5EDE0 100%)',
+              transform: 'rotate(12deg)',
+            }}
+          >
+            <div className="flex flex-col items-center gap-0.5">
+              <div className="flex gap-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#1A1A1A]" />
+                <div className="w-1.5 h-1.5 rounded-full bg-[#1A1A1A]" />
+                <div className="w-1.5 h-1.5 rounded-full bg-[#1A1A1A]" />
               </div>
+              <div className="w-full h-px bg-[#C9A84C]/50" />
+              <div className="w-1.5 h-1.5 rounded-full bg-[#1A1A1A]" />
             </div>
           </div>
         </div>
 
-        <h1 className="text-5xl font-bold text-[#C9A84C] tracking-wider mb-2" style={{ fontFamily: 'Playfair Display, serif' }}>
-          DOMINO
-        </h1>
-        <p className="text-[#B8A080] text-lg font-arabic mb-8">丿賵賲賷賳賵</p>
-
-        {/* Menu buttons */}
-        <div className="w-full max-w-sm space-y-3">
-          {buttons.map((btn) => (
-            <button
-              key={btn.id}
-              onClick={btn.onClick}
-              disabled={btn.disabled}
-              className={`w-full relative overflow-hidden rounded-xl p-4 text-right transition-all duration-200 ${
-                btn.disabled
-                  ? 'opacity-50 cursor-not-allowed'
-                  : 'hover:scale-[1.02] active:scale-[0.98]'
-              }`}
-              style={{
-                background: `linear-gradient(135deg, var(--tw-gradient-stops))`,
-              }}
-            >
-              <div className={`absolute inset-0 bg-gradient-to-r ${btn.gradient} opacity-90`} />
-              <div className="relative flex items-center gap-4">
-                <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center"
-                  style={{ backgroundColor: btn.shadow }}
-                >
-                  <btn.icon className="w-6 h-6 text-white" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-white font-bold text-lg font-arabic">{btn.label}</h3>
-                    {btn.badge && (
-                      <span className="px-2 py-0.5 rounded-full bg-red-500 text-white text-xs font-bold">
-                        {btn.badge}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-white/70 text-sm font-arabic">{btn.sublabel}</p>
-                </div>
-                <span className="text-white/70 text-lg">鈫�</span>
-              </div>
-            </button>
-          ))}
-        </div>
+        <h1 className="font-display text-4xl font-bold gold-text tracking-wider">DOMINO</h1>
+        <p className="text-[#B8A080] text-sm mt-1 font-arabic">丕禺鬲乇 賵囟毓 丕賱賱毓亘</p>
       </div>
 
-      {/* Bottom decoration */}
-      <div className="p-4 flex justify-center gap-2 opacity-30">
-        {[...Array(5)].map((_, i) => (
-          <div key={i} className="w-8 h-12 bg-[#F5E6D3] rounded" />
+      {/* Buttons */}
+      <div className="relative z-10 flex-1 flex flex-col gap-3 px-6 pb-6 overflow-y-auto">
+        {buttons.map((btn) => (
+          <button
+            key={btn.id}
+            onClick={btn.onClick}
+            className={`relative w-full p-4 rounded-2xl text-right transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]`}
+            style={{
+              background: `linear-gradient(135deg, ${btn.gradient.includes('from-') ? '' : ''}${btn.gradient.split(' ')[0].replace('from-', '')} 0%, ${btn.gradient.split(' ')[2].replace('to-', '')} 100%)`,
+              boxShadow: `0 4px 0 ${btn.shadow}, 0 6px 20px rgba(0,0,0,0.4)`,
+            }}
+          >
+            {/* Badge */}
+            {btn.badge && (
+              <span className="absolute -top-2 left-4 px-2 py-0.5 bg-red-500 text-white text-xs rounded-full font-bold">
+                {btn.badge}
+              </span>
+            )}
+
+            <div className="flex items-center gap-4">
+              <btn.icon className="w-10 h-10 text-white/90 flex-shrink-0" />
+              <div className="flex-1">
+                <h3 className="text-white font-bold text-lg font-arabic">{btn.label}</h3>
+                <p className="text-white/60 text-sm font-arabic">{btn.sublabel}</p>
+              </div>
+              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                <span className="text-white/70 text-lg">鈥�</span>
+              </div>
+            </div>
+          </button>
         ))}
+      </div>
+
+      {/* Bottom decorative tiles */}
+      <div className="absolute bottom-0 left-0 right-0 flex justify-between px-4 pb-2 opacity-20 pointer-events-none">
+        <div className="flex gap-1">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={`left-${i}`}
+              className="w-8 h-14 rounded border border-[#C9A84C]/30"
+              style={{
+                background: 'linear-gradient(180deg, #FFFEF8 0%, #F5EDE0 100%)',
+                transform: `rotate(${(i - 1) * 15 - 10}deg)`,
+              }}
+            />
+          ))}
+        </div>
+        <div className="flex gap-1">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={`right-${i}`}
+              className="w-8 h-14 rounded border border-[#C9A84C]/30"
+              style={{
+                background: 'linear-gradient(180deg, #FFFEF8 0%, #F5EDE0 100%)',
+                transform: `rotate(${(i - 1) * 15 + 10}deg)`,
+              }}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -12,7 +12,7 @@ import {
   calculateRoundWinner,
 } from '@/lib/gameEngine';
 import { LEVELS, DIFFICULTY_SETTINGS, AI_NAMES } from '@/types/game';
-import type { Tile, Player } from '@/types/game';
+import type { Tile, Player, PowerUp } from '@/types/game';
 import { DominoTile } from '@/components/DominoTile';
 import { PlayerAvatar } from '@/components/PlayerAvatar';
 import { Board } from '@/components/Board';
@@ -83,13 +83,13 @@ export default function GameScreen() {
     gameInitialized.current = true;
 
     const allTiles = generateAllTiles();
-    const tilesPerPlayer = 2 === 2 ? 7 : 5;
+    const tilesPerPlayer = (levelConfig.aiCount + 1) <= 2 ? 7 : 5;
     const { hands, boneyard: newBoneyard } = dealTiles(allTiles, levelConfig.aiCount + 1, tilesPerPlayer);
 
     const newPlayers: Player[] = [
       {
         id: 'human',
-        name: 'أنت',
+        name: '兀賳鬲',
         avatar: '/assets/avatar_player.png',
         isHuman: true,
         tiles: hands[0],
@@ -125,7 +125,7 @@ export default function GameScreen() {
 
     const firstPlayer = determineFirstPlayer(newPlayers);
     setCurrentPlayerIndex(firstPlayer);
-    setPlayers(newPlayers.map((p, i) => ({ ...p, isActive: i === firstPlayer })));
+    setPlayers(newPlayers.map((p: Player, i: number) => ({ ...p, isActive: i === firstPlayer })));
   }, []);
 
   // Timer
@@ -150,7 +150,7 @@ export default function GameScreen() {
 
   // AI Turn
   useEffect(() => {
-    if (matchWinner || !players[currentPlayerIndex]?.isHuman === false) return;
+    if (matchWinner || players[currentPlayerIndex]?.isHuman) return;
 
     const currentPlayer = players[currentPlayerIndex];
     if (!currentPlayer || currentPlayer.isHuman) return;
@@ -178,12 +178,12 @@ export default function GameScreen() {
       const newTiles = [...currentPlayer.tiles, drawn];
 
       setBoneyard(newBoneyard);
-      setPlayers(players.map((p, i) =>
+      setPlayers(players.map((p: Player, i: number) =>
         i === currentPlayerIndex ? { ...p, tiles: newTiles, tileCount: newTiles.length } : p
       ));
 
       if (canPlayTile(drawn, boardTiles)) {
-        setGameMessage('سحبت قطعة - يمكنك اللعب!');
+        setGameMessage('爻丨亘鬲 賯胤毓丞 - 賷賲賰賳賰 丕賱賱毓亘!');
         setTurnTimer(30);
       } else {
         nextTurn();
@@ -191,7 +191,7 @@ export default function GameScreen() {
     } else {
       nextTurn();
     }
-  }, [players, currentPlayerIndex, boneyard, boardTiles]);
+  }, [players, currentPlayerIndex, boneyard, boardTiles, nextTurn]);
 
   const handleAIPlay = useCallback(() => {
     const currentPlayer = players[currentPlayerIndex];
@@ -203,10 +203,10 @@ export default function GameScreen() {
       const move = aiSelectTile(currentPlayer.tiles, boardTiles, difficulty, new Set());
       if (move) {
         const newBoard = placeTileOnBoard(move.tile, boardTiles, move.side);
-        const newTiles = currentPlayer.tiles.filter((t) => t.id !== move.tile.id);
+        const newTiles = currentPlayer.tiles.filter((t: Tile) => t.id !== move.tile.id);
 
         setBoardTiles(newBoard);
-        setPlayers(players.map((p, i) =>
+        setPlayers(players.map((p: Player, i: number) =>
           i === currentPlayerIndex ? { ...p, tiles: newTiles, tileCount: newTiles.length } : p
         ));
         setLastMove({ tile: move.tile, fromBoneyard: false });
@@ -222,7 +222,7 @@ export default function GameScreen() {
         const newTiles = [...currentPlayer.tiles, drawn];
 
         setBoneyard(newBoneyard);
-        setPlayers(players.map((p, i) =>
+        setPlayers(players.map((p: Player, i: number) =>
           i === currentPlayerIndex ? { ...p, tiles: newTiles, tileCount: newTiles.length } : p
         ));
 
@@ -231,14 +231,14 @@ export default function GameScreen() {
           setTimeout(() => handleAIPlay(), 1500);
           return;
         } else {
-          setGameMessage(`${currentPlayer.name} سحب ومرر`);
+          setGameMessage(`${currentPlayer.name} 爻丨亘 賵賲乇乇`);
         }
       } else {
-        setGameMessage(`${currentPlayer.name} مرر`);
+        setGameMessage(`${currentPlayer.name} 賲乇乇`);
       }
       nextTurn();
     }
-  }, [players, currentPlayerIndex, boardTiles, boneyard, difficulty]);
+  }, [players, currentPlayerIndex, boardTiles, boneyard, difficulty, nextTurn]);
 
   const checkRoundEnd = useCallback((playerTiles: Tile[], _playerIndex?: number) => {
     if (playerTiles.length === 0) {
@@ -260,7 +260,7 @@ export default function GameScreen() {
         setMatchWinner(players[winnerIndex].id);
         setIsTimerRunning(false);
         if (players[winnerIndex].isHuman) {
-          const margin = newScores[winnerIndex] - Math.max(...newScores.filter((_, i) => i !== winnerIndex));
+          const margin = newScores[winnerIndex] - Math.max(...newScores.filter((_: number, i: number) => i !== winnerIndex));
           const stars = margin >= 40 ? 3 : margin >= 20 ? 2 : 1;
           completeLevel(currentLevel, stars, newScores[winnerIndex]);
         }
@@ -280,7 +280,7 @@ export default function GameScreen() {
     const tilesPerPlayer = players.length <= 2 ? 7 : 5;
     const { hands, boneyard: newBoneyard } = dealTiles(allTiles, players.length, tilesPerPlayer);
 
-    const newPlayers = players.map((p, i) => ({
+    const newPlayers = players.map((p: Player, i: number) => ({
       ...p,
       tiles: hands[i],
       tileCount: hands[i].length,
@@ -298,7 +298,7 @@ export default function GameScreen() {
 
     const firstPlayer = determineFirstPlayer(newPlayers);
     setCurrentPlayerIndex(firstPlayer);
-    setPlayers(newPlayers.map((p, i) => ({ ...p, isActive: i === firstPlayer })));
+    setPlayers(newPlayers.map((p: Player, i: number) => ({ ...p, isActive: i === firstPlayer })));
     setTurnTimer(30);
     setIsTimerRunning(true);
   }, [players]);
@@ -306,16 +306,16 @@ export default function GameScreen() {
   const nextTurn = useCallback(() => {
     const nextIndex = (currentPlayerIndex + 1) % players.length;
     setCurrentPlayerIndex(nextIndex);
-    setPlayers(players.map((p, i) => ({ ...p, isActive: i === nextIndex })));
+    setPlayers(players.map((p: Player, i: number) => ({ ...p, isActive: i === nextIndex })));
     setTurnTimer(30);
-  }, [currentPlayerIndex, players]);
+  }, [currentPlayerIndex, players, setTurnTimer]);
 
   const handleTileClick = (tile: Tile) => {
     const currentPlayer = players[currentPlayerIndex];
     if (!currentPlayer?.isHuman || matchWinner) return;
 
     if (!canPlayTile(tile, boardTiles)) {
-      setGameMessage('لا يمكن لعب هذه القطعة!');
+      setGameMessage('賱丕 賷賲賰賳 賱毓亘 賴匕賴 丕賱賯胤毓丞!');
       setTimeout(() => setGameMessage(''), 1500);
       return;
     }
@@ -325,10 +325,10 @@ export default function GameScreen() {
       const sides = getValidSides(tile, boardTiles);
       const side = sides[0] || 'right';
       const newBoard = placeTileOnBoard(tile, boardTiles, side);
-      const newTiles = currentPlayer.tiles.filter((t) => t.id !== tile.id);
+      const newTiles = currentPlayer.tiles.filter((t: Tile) => t.id !== tile.id);
 
       setBoardTiles(newBoard);
-      setPlayers(players.map((p, i) =>
+      setPlayers(players.map((p: Player, i: number) =>
         i === currentPlayerIndex ? { ...p, tiles: newTiles, tileCount: newTiles.length } : p
       ));
       setLastMove({ tile, fromBoneyard: false });
@@ -351,13 +351,13 @@ export default function GameScreen() {
     const newTiles = [...currentPlayer.tiles, drawn];
 
     setBoneyard(newBoneyard);
-    setPlayers(players.map((p, i) =>
+    setPlayers(players.map((p: Player, i: number) =>
       i === currentPlayerIndex ? { ...p, tiles: newTiles, tileCount: newTiles.length } : p
     ));
     setLastMove({ tile: drawn, fromBoneyard: true });
 
     if (canPlayTile(drawn, boardTiles)) {
-      setGameMessage('يمكنك لعب القطعة المسحوبة!');
+      setGameMessage('賷賲賰賳賰 賱毓亘 丕賱賯胤毓丞 丕賱賲爻丨賵亘丞!');
     } else {
       setTimeout(() => nextTurn(), 1000);
     }
@@ -405,10 +405,10 @@ export default function GameScreen() {
 
   const timerProgress = localTimer / 30;
   const currentPlayer = players[currentPlayerIndex];
-  const humanPlayer = players.find((p) => p.isHuman);
+  const humanPlayer = players.find((p: Player) => p.isHuman);
   const playableTiles = humanPlayer ? getPlayableTiles(humanPlayer.tiles, boardTiles) : [];
 
-  const emojis = ['😀', '😂', '😎', '🤔', '👍', '👏', '🔥', '💯', '🎯', '⭐', '🎉', '😱'];
+  const emojis = ['馃榾', '馃槀', '馃槑', '馃', '馃憤', '馃憦', '馃敟', '馃挴', '馃幆', '猸�', '馃帀', '馃槺'];
 
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden bg-[#0D7A3A]">
@@ -446,7 +446,7 @@ export default function GameScreen() {
         {/* Center - Score */}
         <div className="glass-panel rounded-xl px-4 py-2 text-center">
           <p className="text-[#C9A84C] text-xs font-arabic mb-0.5">
-            لعب {targetScore} نقطة
+            賱毓亘 {targetScore} 賳賯胤丞
           </p>
           <div className="flex items-center gap-3">
             <span className="text-green-400 font-bold text-lg">
@@ -463,7 +463,7 @@ export default function GameScreen() {
         <div className="flex items-center gap-2">
           <div className="glass-panel rounded-lg px-3 py-1.5">
             <span className="text-[#B8A080] text-xs font-arabic">
-              قطع {boneyard.length}
+              賯胤毓 {boneyard.length}
             </span>
           </div>
           <button
@@ -528,8 +528,8 @@ export default function GameScreen() {
         {/* Player hand */}
         <div className="py-2">
           <div className="flex items-center justify-center gap-1 overflow-x-auto pb-2 px-2">
-            {humanPlayer?.tiles.map((tile) => {
-              const isPlayable = playableTiles.some((t) => t.id === tile.id);
+            {humanPlayer?.tiles.map((tile: Tile) => {
+              const isPlayable = playableTiles.some((t: Tile) => t.id === tile.id);
               const isSelected = selectedTile?.id === tile.id;
               const isHint = hintTile === tile.id;
 
@@ -560,7 +560,7 @@ export default function GameScreen() {
                 onClick={handleDrawFromBoneyard}
                 className="px-6 py-2 bg-[#C9A84C] text-[#1A0E08] rounded-lg font-bold text-sm font-arabic hover:scale-105 transition-transform"
               >
-                سحب قطعة ({boneyard.length} متبقية)
+                爻丨亘 賯胤毓丞 ({boneyard.length} 賲鬲亘賯賷丞)
               </button>
             </div>
           )}
@@ -572,7 +572,7 @@ export default function GameScreen() {
                 onClick={nextTurn}
                 className="px-6 py-2 bg-[#E74C3C] text-white rounded-lg font-bold text-sm font-arabic hover:scale-105 transition-transform"
               >
-                تمرير
+                鬲賲乇賷乇
               </button>
             </div>
           )}
@@ -581,7 +581,7 @@ export default function GameScreen() {
 
       {/* Power-ups bar */}
       <div className="relative z-10 flex items-center justify-center gap-2 px-4 py-2">
-        {powerUps.map((pu) => (
+        {powerUps.map((pu: PowerUp) => (
           <button
             key={pu.type}
             onClick={() => handleUsePowerUp(pu.type)}
@@ -622,7 +622,7 @@ export default function GameScreen() {
           className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#C9A84C] to-[#A08030] text-[#1A0E08] font-bold text-sm font-arabic hover:scale-105 transition-transform"
         >
           <Trophy className="w-4 h-4 inline ml-1" />
-          طاولة
+          胤丕賵賱丞
         </button>
         <button
           onClick={handleUndo}
@@ -645,7 +645,7 @@ export default function GameScreen() {
       {showEmojiPicker && (
         <div className="absolute bottom-20 left-4 right-4 z-50 glass-panel rounded-xl p-3 animate-slide-up">
           <div className="flex flex-wrap gap-2 justify-center">
-            {emojis.map((emoji) => (
+            {emojis.map((emoji: string) => (
               <button
                 key={emoji}
                 onClick={() => {
@@ -683,7 +683,7 @@ export default function GameScreen() {
       {isPaused && (
         <div className="absolute inset-0 z-50 bg-black/70 flex items-center justify-center animate-fade-in">
           <div className="glass-panel rounded-2xl p-6 w-80 max-w-[90%]">
-            <h2 className="text-2xl font-bold text-white text-center font-arabic mb-6">إيقاف مؤقت</h2>
+            <h2 className="text-2xl font-bold text-white text-center font-arabic mb-6">廿賷賯丕賮 賲丐賯鬲</h2>
             <div className="flex flex-col gap-3">
               <button
                 onClick={() => {
@@ -692,7 +692,7 @@ export default function GameScreen() {
                 }}
                 className="btn-primary w-full"
               >
-                استئناف
+                丕爻鬲卅賳丕賮
               </button>
               <button
                 onClick={() => {
@@ -702,19 +702,19 @@ export default function GameScreen() {
                 }}
                 className="btn-green w-full"
               >
-                إعادة اللعب
+                廿毓丕丿丞 丕賱賱毓亘
               </button>
               <button
                 onClick={() => setScreen('settings')}
                 className="btn-blue w-full"
               >
-                الإعدادات
+                丕賱廿毓丿丕丿丕鬲
               </button>
               <button
                 onClick={handleQuit}
                 className="w-full py-3 rounded-xl bg-[#E74C3C] text-white font-bold font-arabic hover:scale-105 transition-transform"
               >
-                خروج
+                禺乇賵噩
               </button>
             </div>
           </div>

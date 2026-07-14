@@ -408,7 +408,7 @@ export default function GameScreen() {
   const humanPlayer = players.find((p) => p.isHuman);
   const playableTiles = humanPlayer ? getPlayableTiles(humanPlayer.tiles, boardTiles) : [];
 
-  const emojis = ['�', '�', '�', '�', '�', '�', '�', '�', '�', '⭐', '�', '�'];
+  const emojis = ['😀', '😂', '😎', '🤔', '👍', '👏', '🔥', '💯', '🎯', '⭐', '🎉', '😱'];
 
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden bg-[#0D7A3A]">

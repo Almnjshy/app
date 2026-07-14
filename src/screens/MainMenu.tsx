@@ -144,7 +144,7 @@ export default function MainMenu() {
             onClick={btn.onClick}
             className={`relative w-full p-4 rounded-2xl text-right transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]`}
             style={{
-              background: `linear-gradient(135deg, ${btn.gradient.includes('from-') ? '' : ''}${btn.gradient.split(' ')[0].replace('from-', '')} 0%, ${btn.gradient.split(' ')[2].replace('to-', '')} 100%)`,
+              background: `linear-gradient(135deg, ${btn.gradient.includes('from-') ? '' : ''}${btn.gradient?.split(' ')[0]?.replace('from-', '') || ''} 0%, ${btn.gradient?.split(' ')[2]?.replace('to-', '') || ''} 100%)`,
               boxShadow: `0 4px 0 ${btn.shadow}, 0 6px 20px rgba(0,0,0,0.4)`,
             }}
           >
@@ -162,7 +162,7 @@ export default function MainMenu() {
                 <p className="text-white/60 text-sm font-arabic">{btn.sublabel}</p>
               </div>
               <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-                <span className="text-white/70 text-lg">‹</span>
+                <span className="text-white/70 text-lg"> 1�7</span>
               </div>
             </div>
           </button>
